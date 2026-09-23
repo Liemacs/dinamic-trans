@@ -7,6 +7,7 @@ namespace App\Livewire\Dashboard;
 use App\Models\RouteCalculation;
 use App\Models\Setting;
 use App\Models\Vehicle;
+use App\Support\Place;
 use App\Support\RouteCosting;
 use Illuminate\Support\Collection;
 use Illuminate\View\View;
@@ -112,6 +113,38 @@ class Calculator extends Component
         }
 
         $this->applyDefaults();
+    }
+
+    /**
+     * The places this fleet has already driven to, offered as suggestions on the
+     * three town fields.
+     *
+     * @return list<string>
+     */
+    #[Computed]
+    public function places(): array
+    {
+        return Place::known();
+    }
+
+    /*
+     * Each town field snaps onto a spelling already on file. Typing "chisinau"
+     * where "Chișinău" exists stores the second — otherwise the two live on as
+     * separate destinations, and a search for either misses the other's routes.
+     */
+    public function updatedOrigin(): void
+    {
+        $this->origin = Place::canonical($this->origin);
+    }
+
+    public function updatedDestination(): void
+    {
+        $this->destination = Place::canonical($this->destination);
+    }
+
+    public function updatedReturnDestination(): void
+    {
+        $this->return_destination = Place::canonical($this->return_destination);
     }
 
     /**
@@ -305,6 +338,18 @@ class Calculator extends Component
             $data[$key] = $data[$key] === '' || $data[$key] === null ? 0 : $data[$key];
         }
 
+        /*
+         * Snapped again here rather than trusting the update hooks. A deferred
+         * `wire:model` can carry its value in on the very request that calls
+         * save(), and a town that reached the database unfolded is a duplicate
+         * nobody will notice until a search comes up short.
+         */
+        foreach (['origin', 'destination', 'return_destination'] as $field) {
+            if (isset($data[$field])) {
+                $data[$field] = Place::canonical($data[$field]);
+            }
+        }
+
         // The toggle drives the form; the row records the return leg by simply
         // carrying a pickup point or not. (The toggle itself has no rule, so
         // validate() never returned it.)
@@ -314,6 +359,8 @@ class Calculator extends Component
 
         if ($this->editing !== null) {
             RouteCalculation::findOrFail($this->editing)->update($data);
+
+            Place::forget();
 
             session()->flash('status', 'Ruta a fost actualizată.');
 
@@ -328,6 +375,10 @@ class Calculator extends Component
         }
 
         RouteCalculation::create($data);
+
+        // A new town may have just joined the list the next form will offer.
+        Place::forget();
+        unset($this->places);
 
         session()->flash('status', 'Ruta a fost salvată.');
 

@@ -490,4 +490,77 @@ class DashboardTest extends TestCase
             ->assertSet('consumption', '0.6')
             ->assertSet('wear_per_km', '2');
     }
+
+    /**
+     * The three town fields offer what has already been driven to, and a second
+     * spelling of the same town never reaches the database.
+     */
+    public function test_the_calculator_suggests_places_already_on_file(): void
+    {
+        $truck = $this->spreadsheetTruck();
+
+        Livewire::test(Calculator::class)
+            ->set('origin', 'Chișinău')
+            ->set('destination', 'Brăila')
+            ->set('vehicle_id', $truck->id)
+            ->set('distance_km', '220')
+            ->set('days', '3')
+            ->call('save')
+            ->assertHasNoErrors();
+
+        // The saved names come back as suggestions on the next form.
+        Livewire::test(Calculator::class)
+            ->assertSee('<datalist id="localitati">', false)
+            ->assertSee('Chișinău')
+            ->assertSee('Brăila');
+    }
+
+    public function test_a_second_spelling_is_stored_as_the_first(): void
+    {
+        $truck = $this->spreadsheetTruck();
+
+        Livewire::test(Calculator::class)
+            ->set('origin', 'Chișinău')
+            ->set('destination', 'Brăila')
+            ->set('vehicle_id', $truck->id)
+            ->set('distance_km', '220')
+            ->set('days', '3')
+            ->call('save')
+            ->assertHasNoErrors();
+
+        // Typed without diacritics the second time round.
+        Livewire::test(Calculator::class)
+            ->set('origin', 'chisinau')
+            ->assertSet('origin', 'Chișinău')
+            ->set('destination', 'BRAILA')
+            ->assertSet('destination', 'Brăila')
+            ->set('vehicle_id', $truck->id)
+            ->set('distance_km', '300')
+            ->set('days', '2')
+            ->call('save')
+            ->assertHasNoErrors();
+
+        $this->assertSame(
+            ['Chișinău'],
+            RouteCalculation::query()->distinct()->pluck('origin')->all(),
+            'Al doilea mod de scriere nu trebuie să creeze o a doua localitate.',
+        );
+        $this->assertSame(['Brăila'], RouteCalculation::query()->distinct()->pluck('destination')->all());
+    }
+
+    public function test_a_town_nobody_has_driven_to_is_accepted_as_typed(): void
+    {
+        $truck = $this->spreadsheetTruck();
+
+        Livewire::test(Calculator::class)
+            ->set('origin', 'Chișinău')
+            ->set('destination', 'Sfântu Gheorghe')
+            ->set('vehicle_id', $truck->id)
+            ->set('distance_km', '220')
+            ->set('days', '3')
+            ->call('save')
+            ->assertHasNoErrors();
+
+        $this->assertSame('Sfântu Gheorghe', RouteCalculation::sole()->destination);
+    }
 }

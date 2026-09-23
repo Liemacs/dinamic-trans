@@ -241,6 +241,22 @@ npm run build
 php artisan serve
 ```
 
+## Localitățile nu se dublează
+
+Câmpurile de plecare, destinație și punct de încărcare sugerează localitățile pe
+care flota le-a folosit deja. Lista nu e un tabel de orașe: e chiar ce apare în
+rutele salvate, deci o localitate intră în listă la prima rută care o folosește
+și dispare cu ultima.
+
+Sugestia e doar jumătate. `App\Support\Place` compară numele fără diacritice și
+fără majuscule, așa că „chisinau", „Chisinau" și „CHIȘINĂU" se pliază toate pe
+„Chișinău", dacă acela e deja în date. O localitate nouă se păstrează cum ai
+scris-o, doar cu spațiile curățate.
+
+Fără asta, aceeași localitate scrisă în două feluri ar trăi ca două destinații
+diferite: căutarea după una le-ar rata pe ale celeilalte, iar raportul le-ar
+număra separat.
+
 ## Vehiculul e obligatoriu
 
 O rută nu poate fi salvată fără un vehicul ales. Coloana rămâne totuși nullable:

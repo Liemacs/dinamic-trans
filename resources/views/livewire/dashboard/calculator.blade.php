@@ -20,6 +20,20 @@
      beside it holding the result and the Save row (see `dash-aside` in
      resources/css/app.css). Below lg the column simply falls under the form. --}}
 <div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start">
+    {{-- Every town a saved route already mentions, offered on the three place
+         fields. A <datalist> rather than a bespoke dropdown: it is the browser's own
+         control, so it filters as you type, works on a phone, and never blocks a
+         town that is genuinely new.
+
+         Suggesting is only half of it — Place::canonical() snaps what was typed onto
+         the spelling already on file, so "chisinau" cannot become a second Chișinău.
+         See App\Support\Place. --}}
+    <datalist id="localitati">
+        @foreach ($this->places as $place)
+            <option value="{{ $place }}"></option>
+        @endforeach
+    </datalist>
+
     <div class="space-y-6">
         @if (session('status'))
             <div class="rounded-panel border border-line bg-lime/15 px-4 py-3 text-sm text-copy">{{ session('status') }}</div>
@@ -39,8 +53,8 @@
 
         <x-dashboard.card title="Cursa" meta="De unde, până unde și cu ce.">
             <div class="grid gap-4 sm:grid-cols-2">
-                <x-dashboard.field model="origin" label="Plecare" placeholder="Hâncești" required />
-                <x-dashboard.field model="destination" label="Destinație" placeholder="Brăila" required />
+                <x-dashboard.field model="origin" label="Plecare" placeholder="Hâncești" list="localitati" required />
+                <x-dashboard.field model="destination" label="Destinație" placeholder="Brăila" list="localitati" required />
 
                 <x-dashboard.field
                     model="distance_km"
@@ -155,6 +169,7 @@
                     <x-dashboard.field
                         model="return_destination"
                         label="Punct de încărcare"
+                        list="localitati"
                         placeholder="Galați"
                         help="A treia destinație. Trece distanța prin ea la „Distanță întors”."
                         required
