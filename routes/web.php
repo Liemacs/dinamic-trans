@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\ReportExportController;
+use App\Http\Controllers\RouteExportController;
 use App\Http\Controllers\ReportPrintController;
 use App\Models\RouteCalculation;
 use App\Support\DashboardNav;
@@ -59,3 +60,10 @@ Route::get('rute/{route}/modifica', fn (RouteCalculation $route) => view('dashbo
  */
 Route::get('raport/tipar', ReportPrintController::class)->name('dashboard.report.print');
 Route::get('raport/excel', ReportExportController::class)->name('dashboard.report.excel');
+
+/*
+ * The saved routes as a spreadsheet. Outside the nav map like the report's own
+ * downloads: you arrive at it from the list you are already looking at, carrying
+ * that list's search with you.
+ */
+Route::get('rute/excel', RouteExportController::class)->name('dashboard.routes.excel');

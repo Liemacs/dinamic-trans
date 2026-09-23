@@ -47,30 +47,15 @@ class RouteList extends Component
     }
 
     /**
-     * One box searches everything the row shows about where a route went and what
-     * ran it: the three place names and the truck, by name or by plate.
-     *
-     * The whole OR set is wrapped in its own closure so that adding a filter
-     * later cannot leak past it — an unwrapped `orWhere` chained after a `where`
-     * would widen the query instead of narrowing it.
+     * The page of rows the screen shows. What counts as a match lives on the
+     * model (RouteCalculation::scopeMatching), so the export downloads exactly
+     * the rows being looked at.
      */
     private function routes(): LengthAwarePaginator
     {
         return RouteCalculation::query()
             ->with('vehicle')
-            ->when($this->search !== '', function ($query): void {
-                $term = '%'.$this->search.'%';
-
-                $query->where(function ($q) use ($term): void {
-                    $q->where('origin', 'like', $term)
-                        ->orWhere('destination', 'like', $term)
-                        ->orWhere('return_destination', 'like', $term)
-                        ->orWhereHas('vehicle', function ($vehicle) use ($term): void {
-                            $vehicle->where('name', 'like', $term)
-                                ->orWhere('plate', 'like', $term);
-                        });
-                });
-            })
+            ->matching($this->search)
             /*
              * The id breaks ties on the timestamp. Several routes saved in the
              * same second sort arbitrarily under `latest()` alone, and an

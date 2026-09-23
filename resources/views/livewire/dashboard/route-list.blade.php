@@ -9,6 +9,18 @@
 
     <x-dashboard.card :padded="false">
         <x-slot:header>
+            {{-- Carries the search with it, so the file holds exactly the rows on
+                 screen — all of them, not just the page being looked at. A plain
+                 link rather than a Livewire action: a download is a response the
+                 browser has to receive, not a component update. --}}
+            @if ($routes->total() > 0)
+                <a href="{{ route('dashboard.routes.excel', $search === '' ? [] : ['q' => $search]) }}"
+                   class="inline-flex items-center gap-1.5 rounded-button border border-line bg-paper px-3.5 py-2 text-sm font-medium text-copy transition-colors hover:bg-warm">
+                    <x-dashboard.icon name="document" size="size-4" />
+                    Excel
+                </a>
+            @endif
+
             <a href="{{ route('dashboard.calculator') }}"
                class="inline-flex items-center gap-1.5 rounded-button bg-forest px-3.5 py-2 text-sm font-medium text-white transition-colors hover:bg-forest/90">
                 <x-dashboard.icon name="plus" size="size-4" />

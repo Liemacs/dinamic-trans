@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Support\RouteCosting;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -56,6 +57,36 @@ class RouteCalculation extends Model
             'driver_extra_day' => 'float',
             'loading_day_bonus' => 'float',
         ];
+    }
+
+    /**
+     * The one definition of "matches the search box": the three place names and
+     * the truck, by name or by plate.
+     *
+     * Shared by the list screen and the spreadsheet export, so the file someone
+     * downloads holds exactly the rows they were looking at.
+     *
+     * The whole OR set sits inside its own closure. Chained loose onto the query,
+     * a vehicle clause would widen the result rather than narrow it — and the
+     * search would quietly return everything.
+     */
+    public function scopeMatching(Builder $query, string $term): Builder
+    {
+        if (trim($term) === '') {
+            return $query;
+        }
+
+        $like = '%'.trim($term).'%';
+
+        return $query->where(function (Builder $q) use ($like): void {
+            $q->where('origin', 'like', $like)
+                ->orWhere('destination', 'like', $like)
+                ->orWhere('return_destination', 'like', $like)
+                ->orWhereHas('vehicle', function (Builder $vehicle) use ($like): void {
+                    $vehicle->where('name', 'like', $like)
+                        ->orWhere('plate', 'like', $like);
+                });
+        });
     }
 
     public function vehicle(): BelongsTo

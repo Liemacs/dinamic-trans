@@ -147,7 +147,7 @@ class ReportExportController extends Controller
         $sheet->row([$bold('Rezultat'), XlsxWriter::cell($bottom['result'], XlsxWriter::NUMBER, true)]);
 
         $sheet->blank();
-        $sheet->row(['Uzura nu se scade de două ori: profitul fiecărei rute conține deja uzura pe kilometru, care este chiar modul în care facturile anuale ale camionului se împart pe curse. „Costuri de drum" pornește fără ea, iar cheltuielile camioanelor intră o singură dată.']);
+        $sheet->row(['Uzura nu se scade de două ori: profitul fiecărei rute conține deja uzura pe kilometru — un tarif fix, cu care cursele contribuie la cheltuielile camioanelor. „Costuri de drum" pornește fără ea, iar cheltuielile reale ale camioanelor intră o singură dată.']);
         $sheet->row([sprintf(
             'Prin kilometrii din perioadă s-au recuperat %s %s din cheltuielile camioanelor.',
             number_format($bottom['wear'], 0, ',', '.'),

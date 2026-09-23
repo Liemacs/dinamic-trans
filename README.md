@@ -125,7 +125,7 @@ ea scrie la ce ar duce ritmul de până acum pe un an întreg.
 | --- | --- |
 | `/` | Sumar: totalurile, graficele pe perioade, rezultatul anual, ultimele rute |
 | `/calculator` | Calculatorul live, cu rezultatul fixat lângă formular |
-| `/rute` | Rutele salvate, cu căutare (localitate, camion, număr) și paginare |
+| `/rute` | Rutele salvate, cu căutare (localitate, camion, număr), paginare și export Excel |
 | `/raport` | Darea de seamă pe o perioadă, cu filtru de camion |
 | `/raport/tipar` | Aceeași foaie pe o pagină goală, care deschide tipărirea |
 | `/raport/excel` | Aceleași rânduri, descărcate ca `.xlsx` |
