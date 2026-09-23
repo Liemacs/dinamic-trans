@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Support\Names;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
@@ -39,6 +40,36 @@ class Vehicle extends Model
     public function routeCalculations(): HasMany
     {
         return $this->hasMany(RouteCalculation::class);
+    }
+
+    /**
+     * The model names already on the fleet, offered as suggestions on the vehicle
+     * form.
+     *
+     * A fleet usually runs several of the same lorry — three Volvo FH 460 told
+     * apart by their plates — so the name is not unique and repeating it is
+     * normal. What is not normal is repeating it differently: "Volvo FH 460" and
+     * "volvo fh460" read as two models in a list meant to be scanned.
+     *
+     * @return list<string>
+     */
+    public static function knownNames(): array
+    {
+        return Names::suggestions(
+            self::query()->whereNotNull('name')->where('name', '!=', '')->distinct()->pluck('name')
+        );
+    }
+
+    /**
+     * What a typed model name should be stored as: the spelling already on the
+     * fleet when one matches, the tidied input otherwise.
+     *
+     * Only the name. A plate is each lorry's own and must never be snapped onto
+     * another's.
+     */
+    public static function canonicalName(?string $typed): string
+    {
+        return Names::canonical($typed, self::knownNames());
     }
 
     public function label(): string

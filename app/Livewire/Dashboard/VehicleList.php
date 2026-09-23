@@ -46,6 +46,28 @@ class VehicleList extends Component
         $this->applyDefaults();
     }
 
+    /**
+     * The model names already on the fleet, for the suggestion list on the name
+     * field.
+     *
+     * @return list<string>
+     */
+    #[Computed]
+    public function names(): array
+    {
+        return Vehicle::knownNames();
+    }
+
+    /*
+     * The name snaps onto a spelling already on the fleet, so a second "volvo
+     * fh460" does not sit in the table beside "Volvo FH 460" looking like a
+     * different lorry. The plate is left alone: it is each truck's own.
+     */
+    public function updatedName(): void
+    {
+        $this->name = Vehicle::canonicalName($this->name);
+    }
+
     #[Computed]
     public function vehicles(): Collection
     {
@@ -117,6 +139,14 @@ class VehicleList extends Component
             $data[$key] = $data[$key] === '' || $data[$key] === null ? 0 : $data[$key];
         }
 
+        /*
+         * Folded again here rather than trusting the update hook. A deferred
+         * `wire:model` can carry its value in on the very request that calls
+         * save(), and the whole point is that no second spelling reaches the
+         * table.
+         */
+        $data['name'] = Vehicle::canonicalName($data['name']);
+
         if ($this->editing !== null) {
             Vehicle::findOrFail($this->editing)->update($data);
             session()->flash('status', 'Vehiculul a fost actualizat.');
@@ -127,9 +157,10 @@ class VehicleList extends Component
 
         $this->cancel();
 
-        // The list is a computed property, so it has to be told the table under
-        // it moved; without this the row just saved is missing until a reload.
-        unset($this->vehicles);
+        // Both lists are computed properties, so they have to be told the table
+        // under them moved; without this the row just saved is missing until a
+        // reload, and a new model name is absent from the suggestions.
+        unset($this->vehicles, $this->names);
     }
 
     public function delete(int $id): void
@@ -140,7 +171,7 @@ class VehicleList extends Component
             $this->cancel();
         }
 
-        unset($this->vehicles);
+        unset($this->vehicles, $this->names);
 
         session()->flash('status', 'Vehiculul a fost șters.');
     }

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Support;
 
 use App\Models\RouteCalculation;
-use Illuminate\Support\Str;
 
 /**
  * The place names the fleet has actually driven to.
@@ -15,10 +14,8 @@ use Illuminate\Support\Str;
  * with the last route that used it. Nothing to maintain, and no invented
  * geography.
  *
- * Its job is to stop the same town being typed two ways. "Chișinău" and
- * "Chisinau" are one place, and once either spelling is on file the other snaps
- * to it — otherwise a search for one misses the routes filed under the other, and
- * the report counts them as two destinations.
+ * Its job is to stop the same town being typed two ways — see App\Support\Names,
+ * which does the matching.
  */
 final class Place
 {
@@ -41,31 +38,14 @@ final class Place
      */
     public static function known(): array
     {
-        if (self::$memo !== null) {
-            return self::$memo;
-        }
-
-        $names = collect(self::COLUMNS)
-            ->flatMap(static fn (string $column): array => RouteCalculation::query()
+        return self::$memo ??= Names::suggestions(
+            collect(self::COLUMNS)->flatMap(static fn (string $column): array => RouteCalculation::query()
                 ->whereNotNull($column)
                 ->where($column, '!=', '')
                 ->distinct()
                 ->pluck($column)
                 ->all())
-            ->map(static fn (string $name): string => trim($name))
-            ->filter();
-
-        /*
-         * Unique by folded key rather than by literal string. Two spellings of one
-         * town would otherwise both survive into the suggestions, which is the
-         * problem this class exists to prevent — the first one seen wins, and
-         * canonical() then pulls the rest onto it.
-         */
-        return self::$memo = $names
-            ->unique(static fn (string $name): string => self::key($name))
-            ->sort(SORT_NATURAL | SORT_FLAG_CASE)
-            ->values()
-            ->all();
+        );
     }
 
     /**
@@ -74,21 +54,7 @@ final class Place
      */
     public static function canonical(?string $typed): string
     {
-        $typed = trim(preg_replace('/\s+/u', ' ', (string) $typed) ?? '');
-
-        if ($typed === '') {
-            return '';
-        }
-
-        $key = self::key($typed);
-
-        foreach (self::known() as $known) {
-            if (self::key($known) === $key) {
-                return $known;
-            }
-        }
-
-        return $typed;
+        return Names::canonical($typed, self::known());
     }
 
     /**
@@ -98,14 +64,5 @@ final class Place
     public static function forget(): void
     {
         self::$memo = null;
-    }
-
-    /**
-     * The form a name is compared in: no diacritics, no case. "Chișinău",
-     * "chisinau" and "CHIȘINĂU" all reduce to the same key.
-     */
-    private static function key(string $name): string
-    {
-        return Str::lower(Str::ascii($name));
     }
 }

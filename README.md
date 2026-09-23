@@ -241,7 +241,7 @@ npm run build
 php artisan serve
 ```
 
-## Localitățile nu se dublează
+## Numele nu se dublează
 
 Câmpurile de plecare, destinație și punct de încărcare sugerează localitățile pe
 care flota le-a folosit deja. Lista nu e un tabel de orașe: e chiar ce apare în
@@ -256,6 +256,18 @@ scris-o, doar cu spațiile curățate.
 Fără asta, aceeași localitate scrisă în două feluri ar trăi ca două destinații
 diferite: căutarea după una le-ar rata pe ale celeilalte, iar raportul le-ar
 număra separat.
+
+Același lucru la **numele camioanelor**. O flotă rulează de obicei mai multe
+exemplare din același model — trei Volvo FH 460 deosebite prin numere — deci
+repetarea numelui e normală; repetarea lui altfel nu e. `Vehicle::canonicalName()`
+pliază ce scrii pe grafia deja aflată în flotă.
+
+**Numărul de înmatriculare nu se pliază niciodată.** E al fiecărui camion în
+parte, iar alinierea lui pe al altuia ar muta tăcut înmatricularea unui camion pe
+altul.
+
+Partea comună — compararea fără diacritice, fără majuscule și fără spații în plus
+— stă în `App\Support\Names`, folosită de amândouă.
 
 ## Vehiculul e obligatoriu
 

@@ -7,6 +7,16 @@
 @endphp
 
 <div class="space-y-6">
+    {{-- The model names already on the fleet. A fleet runs several of the same
+         lorry, so repeating a name is normal — repeating it differently is not,
+         and Vehicle::canonicalName() folds what is typed onto the spelling
+         already here. --}}
+    <datalist id="nume-camioane">
+        @foreach ($this->names as $name)
+            <option value="{{ $name }}"></option>
+        @endforeach
+    </datalist>
+
     <div class="space-y-4">
         @if (session('status'))
             <div class="rounded-panel border border-line bg-lime/15 px-4 py-3 text-sm text-copy">{{ session('status') }}</div>
@@ -113,7 +123,7 @@
     <div id="vehicul-form" class="grid gap-4 lg:grid-cols-2 lg:items-start">
         <x-dashboard.card :title="$editing ? 'Editează vehiculul' : 'Vehicul nou'">
             <div class="grid gap-4 sm:grid-cols-2">
-                <x-dashboard.field model="name" label="Nume" placeholder="Volvo FH 460" required />
+                <x-dashboard.field model="name" label="Nume" placeholder="Volvo FH 460" list="nume-camioane" required />
                 <x-dashboard.field model="plate" label="Număr" placeholder="CVB 407" />
                 <x-dashboard.field
                     model="consumption"
