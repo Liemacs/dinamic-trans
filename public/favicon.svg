@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Dinamic Trans">
+    <!--
+        The sidebar mark, at favicon size: the forest tile with the app's
+        initials in lime.
+
+        The letters are paths rather than <text>. A favicon is rendered by the
+        browser with whatever font it can find, and a missing one would leave the
+        mark blank or set it in something that is not the app's face.
+    -->
+    <rect width="64" height="64" rx="14" fill="#0e1a09"/>
+    <g fill="#e2ff00" fill-rule="evenodd">
+        <!-- D -->
+        <path d="M9 19h11a13 13 0 0 1 0 26H9V19Zm7 6v14h4a7 7 0 0 0 0-14h-4Z"/>
+        <!-- T -->
+        <path d="M33 19h22v6h-8v20h-6V25h-8v-6Z"/>
+    </g>
+</svg>
