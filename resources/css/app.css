@@ -1,0 +1,316 @@
+@import 'tailwindcss';
+@import '@fontsource-variable/inter/index.css';
+
+@plugin '@tailwindcss/typography';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@source '../**/*.blade.php';
+@source '../**/*.js';
+@source '../../app/Livewire/**/*.php';
+
+/*
+ * The palette, radii and type scale are ported from the Hey Roger back office
+ * (heyrogersmith/resources/css/app.css). Only the dashboard half came across:
+ * this app has no public marketing site, so the display face, the SF Symbols
+ * subset, the process timeline and the per-service theme relay stayed behind.
+ *
+ * Token names are kept identical to Hey Roger's so a component can be moved
+ * between the two projects without a rename.
+ */
+@theme {
+    /*
+     * Inter throughout. Hey Roger sets the site in Poppins and the back office in
+     * Inter, on the grounds that a display face costs width and legibility in
+     * dense tables and 12px labels — and this project is back office only.
+     *
+     * --font-ui is kept as its own token even though it resolves to the same
+     * stack, because every component ported from Hey Roger asks for it by name.
+     */
+    --font-sans: 'Inter', 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
+    --font-ui: 'Inter', 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
+
+    --color-forest: #0e1a09;
+    --color-lime: #e2ff00;
+    --color-lime-soft: #f1ffab;
+    --color-paper: #ffffff;
+    --color-warm: #f6f6f1;
+    --color-soft: #f6f6f6;
+    --color-copy: #0e1a09;
+    --color-muted: #787664;
+    --color-line: #e8e8df;
+
+    /* Card fills and the body colours that sit on them. */
+    --color-tint: #e8ede7;
+    --color-tint-alt: #e8e8df;
+    --color-copy-soft: #495346;
+    --color-copy-dim: #959486;
+
+    /* Semantic scales the ported components address directly — the sidebar
+       reaches for ink-400/500/600, the button for brand-* and accent-*. */
+    --color-brand-50: #f1ffab;
+    --color-brand-100: #efffa8;
+    --color-brand-200: #e8ff72;
+    --color-brand-300: #e2ff00;
+    --color-brand-400: #d2ed00;
+    --color-brand-500: #0e1a09;
+    --color-brand-600: #0e1a09;
+    --color-brand-700: #071005;
+    --color-brand-800: #071005;
+    --color-brand-900: #071005;
+    --color-accent-50: #f1ffab;
+    --color-accent-100: #edff91;
+    --color-accent-200: #e8ff72;
+    --color-accent-300: #e2ff00;
+    --color-accent-400: #d2ed00;
+    --color-accent-500: #c6df00;
+    --color-accent-600: #e2ff00;
+    --color-accent-700: #bed700;
+    --color-ink-50: #f6f6f6;
+    --color-ink-100: #eeeeeb;
+    --color-ink-200: #e8e8df;
+    --color-ink-300: #d7d7cb;
+    --color-ink-400: #aaa99d;
+    --color-ink-500: #787664;
+    --color-ink-600: #575649;
+    --color-ink-700: #202d1c;
+    --color-ink-800: #0e1a09;
+    --color-ink-900: #0e1a09;
+
+    --radius-card: 1.625rem;
+    --radius-panel: 1.25rem;
+    --radius-button: 0.75rem;
+    --radius-pill: 999px;
+    --shadow-card: 0 18px 44px rgba(14, 26, 9, 0.08);
+}
+
+@layer base {
+    html {
+        scroll-behavior: smooth;
+        -webkit-text-size-adjust: 100%;
+    }
+
+    body {
+        @apply bg-paper font-ui text-copy antialiased;
+    }
+
+    /* Admin headings are short and live in fixed-width chrome, where a balanced
+       line break only makes the column jump — so no text-wrap: balance here. */
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+        @apply font-ui text-copy;
+    }
+
+    button,
+    a,
+    summary {
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    button,
+    summary {
+        cursor: pointer;
+    }
+
+    :focus-visible {
+        @apply outline-2 outline-offset-2 outline-forest;
+    }
+
+    ::selection {
+        @apply bg-lime text-forest;
+    }
+
+    :root {
+        color-scheme: light;
+    }
+
+    [x-cloak] {
+        display: none !important;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        html {
+            scroll-behavior: auto;
+        }
+
+        *,
+        *::before,
+        *::after {
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+            transition-duration: 0.01ms !important;
+            scroll-behavior: auto !important;
+        }
+    }
+}
+
+/* WCAG 2.1 AA asks for 44px; icon-only controls get it from here rather than
+   from padding that would also move the icon. */
+@utility tap-target {
+    min-width: 2.75rem;
+    min-height: 2.75rem;
+}
+
+@utility scrollbar-hidden {
+    scrollbar-width: none;
+
+    &::-webkit-scrollbar {
+        display: none;
+    }
+}
+
+@utility skip-link {
+    position: absolute;
+    left: -9999px;
+    top: 0;
+    z-index: 100;
+
+    &:focus {
+        left: 1rem;
+        top: 1rem;
+    }
+}
+
+/* ---------------------------------------------------------------------------
+   Back-office side column
+
+   Every editing screen is a wide form with a narrow column beside it — inputs
+   on the left, the live result and the Save row on the right. The column is
+   pinned so those stay put while the form scrolls, and carries its own
+   scrollbar when it has more in it than there is room for.
+
+   The height is measured in `cqh` — a percentage of <main>, which is the
+   dashboard's scroll container (layouts/dashboard.blade.php makes it a size
+   container for exactly this). `dvh` would be wrong: the topbar sits above
+   <main>, so a column sized to the whole viewport overflows by however tall the
+   topbar is, which puts the Save row under the fold — the one thing pinning it
+   was meant to prevent.
+   --------------------------------------------------------------------------- */
+
+@utility dash-aside {
+    position: sticky;
+    top: 1.5rem;
+    max-height: calc(100cqh - 3rem);
+    overflow-y: auto;
+    /* Room for the scrollbar so it never sits on top of a card's edge. */
+    padding-right: 0.25rem;
+}
+
+/* The Save row, held at the foot of that column so it is visible whether or not
+   the column has scrolled. Opaque, and bled over the scrollbar gutter, so the
+   cards pass behind it cleanly rather than showing through beside it. */
+@utility dash-aside-actions {
+    position: sticky;
+    bottom: 0;
+    z-index: 10;
+    margin-inline: -0.25rem;
+    padding: 0.75rem 0.25rem 0.25rem;
+    background-color: var(--color-warm);
+}
+
+/*
+ * Sliders. A 10px track with a 28px thumb.
+ *
+ * The element is 28px tall so the drag target is the whole thumb, with -9px
+ * block margins collapsing its layout footprint back to the track's 10px.
+ *
+ * WebKit has no progress pseudo-element, so the filled portion is a hard
+ * gradient stop driven by --range-fill. Blade renders the initial value and
+ * Alpine updates it on input, so the fill tracks the thumb without waiting on a
+ * Livewire round trip.
+ */
+@utility range-lime {
+    --range-fill: 0%;
+    /* A shade under the fill, so the thumb reads against the track it sits on. */
+    --range-thumb-ring: color-mix(in oklab, var(--color-lime) 88%, black);
+
+    appearance: none;
+    -webkit-appearance: none;
+    width: 100%;
+    height: 1.75rem;
+    margin-block: -0.5625rem;
+    background: transparent;
+    cursor: pointer;
+
+    &::-webkit-slider-runnable-track {
+        height: 0.625rem;
+        border-radius: 40px;
+        background: linear-gradient(
+            to right,
+            var(--color-lime) var(--range-fill),
+            var(--color-line) var(--range-fill)
+        );
+    }
+
+    &::-webkit-slider-thumb {
+        appearance: none;
+        -webkit-appearance: none;
+        box-sizing: border-box;
+        height: 1.75rem;
+        width: 1.75rem;
+        margin-top: -0.5625rem;
+        border: 6px solid var(--range-thumb-ring);
+        border-radius: 60px;
+        background: #fff;
+    }
+
+    &::-moz-range-track {
+        height: 0.625rem;
+        border-radius: 40px;
+        background: var(--color-line);
+    }
+
+    &::-moz-range-progress {
+        height: 0.625rem;
+        border-radius: 40px;
+        background: var(--color-lime);
+    }
+
+    &::-moz-range-thumb {
+        box-sizing: border-box;
+        height: 1.75rem;
+        width: 1.75rem;
+        border: 6px solid var(--range-thumb-ring);
+        border-radius: 60px;
+        background: #fff;
+    }
+}
+
+/*
+ * Print.
+ *
+ * Only one page in this app is meant for paper — the darea de seamă, which is
+ * rendered on a bare layout of its own (components/layouts/print.blade.php), so
+ * nothing here has to undo the dashboard shell. What is left is the paper
+ * itself: landscape, because the sheet is a wide table, and the rules that keep
+ * a table readable once it runs past one page.
+ */
+@media print {
+    @page {
+        size: A4 landscape;
+        margin: 10mm;
+    }
+
+    html,
+    body {
+        background: #fff;
+    }
+
+    /* The header row is repeated on every page a long table spills onto. */
+    thead {
+        display: table-header-group;
+    }
+
+    tr {
+        break-inside: avoid;
+    }
+
+    /* Links print as their text; a bare URL after every route name is noise. */
+    a[href]::after {
+        content: none;
+    }
+}
