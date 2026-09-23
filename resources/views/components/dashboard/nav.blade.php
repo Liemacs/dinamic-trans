@@ -34,8 +34,18 @@
 <div class="flex h-full flex-col gap-6 px-3 py-5" x-data="{ group: @js($currentGroup) }">
     <a href="{{ route('dashboard.overview') }}" class="flex items-center gap-3 rounded-panel px-1 py-1" @if ($collapsible) :class="$store.sidebar?.collapsed && 'justify-center'" @endif>
         {{-- The brand mark: the app's initials on the forest tile, so the shell
-             has an identity without waiting on an uploaded logo. --}}
-        <span class="inline-flex size-10 shrink-0 items-center justify-center rounded-xl bg-forest text-sm font-semibold text-lime">CR</span>
+             has an identity without waiting on an uploaded logo.
+
+             Taken from the name rather than typed, or renaming the app leaves the
+             old initials sitting in the corner. --}}
+        @php
+            $initials = collect(preg_split('/\s+/', __('dashboard.brand')) ?: [])
+                ->filter()
+                ->take(2)
+                ->map(fn (string $word): string => mb_strtoupper(mb_substr($word, 0, 1)))
+                ->implode('');
+        @endphp
+        <span class="inline-flex size-10 shrink-0 items-center justify-center rounded-xl bg-forest text-sm font-semibold text-lime">{{ $initials }}</span>
         <span class="min-w-0" @if ($collapsible) x-show="! $store.sidebar?.collapsed" @endif>
             <span class="block truncate text-sm font-semibold text-copy">{{ __('dashboard.brand') }}</span>
             <span class="block truncate text-xs text-muted">{{ __('dashboard.brand_subtitle') }}</span>

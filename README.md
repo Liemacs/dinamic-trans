@@ -1,4 +1,4 @@
-# Calculator Rute
+# Dinamic Trans
 
 Panou de control pentru calculul rentabilității curselor: introduci datele unei
 curse, vezi în timp real prețul, costul, salariul șoferului, profitul și marja,

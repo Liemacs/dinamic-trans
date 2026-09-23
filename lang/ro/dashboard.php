@@ -8,7 +8,7 @@ declare(strict_types=1);
  * new section is one entry in that class plus one block below.
  */
 return [
-    'brand' => 'Calculator Rute',
+    'brand' => 'Dinamic Trans',
     'brand_subtitle' => 'Panou de control',
 
     'nav' => [
