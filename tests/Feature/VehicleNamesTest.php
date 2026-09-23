@@ -92,10 +92,28 @@ class VehicleNamesTest extends TestCase
     }
 
     /**
-     * A plate is each lorry's own. Folding it onto another's would quietly move
-     * the registration of one truck onto a second.
+     * "cvb 407" and "CVB 407" are the same registration on the same lorry, so a
+     * plate is tidied into one shape rather than stored as typed.
+     *
+     * This is not the same as folding a plate onto a *different* truck's, which
+     * nothing does — the uniqueness rule refuses that outright.
      */
-    public function test_the_plate_is_never_folded(): void
+    public function test_a_plate_is_tidied_into_one_shape(): void
+    {
+        $this->assertSame('CVB 407', Vehicle::tidyPlate('cvb 407'));
+        $this->assertSame('CVB 407', Vehicle::tidyPlate('  CVB   407  '));
+        $this->assertSame('', Vehicle::tidyPlate(null));
+
+        Livewire::test(VehicleList::class)
+            ->set('plate', 'cvb 407')
+            ->assertSet('plate', 'CVB 407');
+    }
+
+    /**
+     * Two lorries cannot share a registration. Before, the same plate typed in
+     * another case produced a second truck.
+     */
+    public function test_a_registration_already_on_the_fleet_is_refused(): void
     {
         $this->truck('Volvo FH 460', 'CVB 407');
 
@@ -104,12 +122,54 @@ class VehicleNamesTest extends TestCase
             ->set('plate', 'cvb 407')
             ->set('consumption', '0.45')
             ->call('save')
+            ->assertHasErrors(['plate'])
+            ->assertSee('Există deja un camion cu acest număr de înmatriculare.');
+
+        $this->assertSame(1, Vehicle::count());
+    }
+
+    /** Saving a truck without touching its plate must not fail against itself. */
+    public function test_a_truck_keeps_its_own_plate_when_edited(): void
+    {
+        $truck = $this->truck('Volvo FH 460', 'CVB 407');
+
+        Livewire::test(VehicleList::class)
+            ->call('edit', $truck->id)
+            ->set('consumption', '0.5')
+            ->call('save')
             ->assertHasNoErrors();
 
-        $this->assertSame(
-            ['CVB 407', 'cvb 407'],
-            Vehicle::query()->orderBy('id')->pluck('plate')->all(),
-        );
+        $this->assertSame('CVB 407', $truck->fresh()->plate);
+        $this->assertSame(0.5, $truck->fresh()->consumption);
+    }
+
+    public function test_the_form_offers_the_registrations_on_file(): void
+    {
+        $this->truck('Volvo FH 460', 'CVB 407');
+        $this->truck('MAN TGX', 'SRD 118');
+
+        Livewire::test(VehicleList::class)
+            ->assertSee('<datalist id="numere-camioane">', false)
+            ->assertSee('CVB 407')
+            ->assertSee('SRD 118');
+    }
+
+    /** A plate is optional, and several trucks may be waiting for one. */
+    public function test_several_trucks_may_have_no_plate_yet(): void
+    {
+        Livewire::test(VehicleList::class)
+            ->set('name', 'Volvo FH 460')
+            ->set('consumption', '0.45')
+            ->call('save')
+            ->assertHasNoErrors();
+
+        Livewire::test(VehicleList::class)
+            ->set('name', 'MAN TGX')
+            ->set('consumption', '0.44')
+            ->call('save')
+            ->assertHasNoErrors();
+
+        $this->assertSame(2, Vehicle::count());
     }
 
     public function test_a_new_model_joins_the_suggestions(): void

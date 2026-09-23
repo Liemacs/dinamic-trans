@@ -17,6 +17,15 @@
         @endforeach
     </datalist>
 
+    {{-- The registrations on file. Not there to be picked — a plate belongs to
+         one lorry — but so that seeing one appear as you type tells you the truck
+         is already on the fleet, before the uniqueness rule says so on save. --}}
+    <datalist id="numere-camioane">
+        @foreach ($this->plates as $plate)
+            <option value="{{ $plate }}"></option>
+        @endforeach
+    </datalist>
+
     <div class="space-y-4">
         @if (session('status'))
             <div class="rounded-panel border border-line bg-lime/15 px-4 py-3 text-sm text-copy">{{ session('status') }}</div>
@@ -124,7 +133,7 @@
         <x-dashboard.card :title="$editing ? 'Editează vehiculul' : 'Vehicul nou'">
             <div class="grid gap-4 sm:grid-cols-2">
                 <x-dashboard.field model="name" label="Nume" placeholder="Volvo FH 460" list="nume-camioane" required />
-                <x-dashboard.field model="plate" label="Număr" placeholder="CVB 407" />
+                <x-dashboard.field model="plate" label="Număr" placeholder="CVB 407" list="numere-camioane" help="Dacă numărul apare în listă, camionul e deja în flotă." />
                 <x-dashboard.field
                     model="consumption"
                     label="Consum"

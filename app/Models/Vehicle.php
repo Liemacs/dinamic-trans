@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Support\Names;
+use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
@@ -70,6 +71,36 @@ class Vehicle extends Model
     public static function canonicalName(?string $typed): string
     {
         return Names::canonical($typed, self::knownNames());
+    }
+
+    /**
+     * The registrations already on the fleet, offered on the plate field.
+     *
+     * Unlike the model name, this is not there to be picked: a plate belongs to
+     * one lorry, so seeing it appear as you type means the truck is already on
+     * file — a warning, not a shortcut.
+     *
+     * @return list<string>
+     */
+    public static function knownPlates(): array
+    {
+        return Names::suggestions(
+            self::query()->whereNotNull('plate')->where('plate', '!=', '')->distinct()->pluck('plate')
+        );
+    }
+
+    /**
+     * A registration in one shape: upper case, single spaces, trimmed.
+     *
+     * "cvb 407" and "CVB 407" are the same plate on the same lorry, so they are
+     * tidied into the same string rather than left to sit in the table as two
+     * trucks. That is the opposite of folding a plate onto a *different* one,
+     * which nothing here does — the uniqueness rule on the form refuses that
+     * instead.
+     */
+    public static function tidyPlate(?string $typed): string
+    {
+        return Str::upper(Names::tidy($typed));
     }
 
     public function label(): string

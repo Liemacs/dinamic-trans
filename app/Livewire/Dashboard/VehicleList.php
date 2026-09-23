@@ -6,6 +6,7 @@ namespace App\Livewire\Dashboard;
 
 use App\Models\Setting;
 use App\Models\Vehicle;
+use Illuminate\Validation\Rule;
 use Illuminate\Support\Collection;
 use Illuminate\View\View;
 use Livewire\Attributes\Computed;
@@ -68,6 +69,30 @@ class VehicleList extends Component
         $this->name = Vehicle::canonicalName($this->name);
     }
 
+    /**
+     * The registrations already on the fleet.
+     *
+     * Offered so that typing one that exists shows it — which means the lorry is
+     * already on file. Not to be picked from: a plate belongs to one truck.
+     *
+     * @return list<string>
+     */
+    #[Computed]
+    public function plates(): array
+    {
+        return Vehicle::knownPlates();
+    }
+
+    /*
+     * One shape for a registration, so "cvb 407" and "CVB 407" cannot sit in the
+     * table as two lorries. This tidies a plate into itself; it never moves it
+     * onto another truck's — the uniqueness rule below refuses that.
+     */
+    public function updatedPlate(): void
+    {
+        $this->plate = Vehicle::tidyPlate($this->plate);
+    }
+
     #[Computed]
     public function vehicles(): Collection
     {
@@ -114,9 +139,20 @@ class VehicleList extends Component
 
     public function save(): void
     {
+        /*
+         * Tidied before the rules run, not after. A deferred `wire:model` can
+         * carry its value in on the request that calls save(), and the
+         * uniqueness check below has to see the same shape the table stores —
+         * otherwise "cvb 407" slips past a row holding "CVB 407".
+         */
+        $this->plate = Vehicle::tidyPlate($this->plate);
+
         $data = $this->validate([
             'name' => ['required', 'string', 'max:120'],
-            'plate' => ['nullable', 'string', 'max:20'],
+            // Two lorries cannot share a registration. Ignoring the row being
+            // edited, or saving a truck without touching its plate would fail
+            // against itself.
+            'plate' => ['nullable', 'string', 'max:20', Rule::unique('vehicles', 'plate')->ignore($this->editing)],
             'consumption' => ['required', 'numeric', 'min:0'],
             'insurance_annual' => ['nullable', 'numeric', 'min:0'],
             'service_annual' => ['nullable', 'numeric', 'min:0'],
@@ -124,6 +160,8 @@ class VehicleList extends Component
             'other_annual' => ['nullable', 'numeric', 'min:0'],
             'gps_monthly' => ['nullable', 'numeric', 'min:0'],
             'active' => ['boolean'],
+        ], messages: [
+            'plate.unique' => 'Există deja un camion cu acest număr de înmatriculare.',
         ], attributes: [
             'name' => 'numele',
             'plate' => 'numărul de înmatriculare',
@@ -160,7 +198,7 @@ class VehicleList extends Component
         // Both lists are computed properties, so they have to be told the table
         // under them moved; without this the row just saved is missing until a
         // reload, and a new model name is absent from the suggestions.
-        unset($this->vehicles, $this->names);
+        unset($this->vehicles, $this->names, $this->plates);
     }
 
     public function delete(int $id): void
@@ -171,7 +209,7 @@ class VehicleList extends Component
             $this->cancel();
         }
 
-        unset($this->vehicles, $this->names);
+        unset($this->vehicles, $this->names, $this->plates);
 
         session()->flash('status', 'Vehiculul a fost șters.');
     }

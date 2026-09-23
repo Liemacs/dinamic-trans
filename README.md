@@ -262,9 +262,15 @@ exemplare din același model — trei Volvo FH 460 deosebite prin numere — dec
 repetarea numelui e normală; repetarea lui altfel nu e. `Vehicle::canonicalName()`
 pliază ce scrii pe grafia deja aflată în flotă.
 
-**Numărul de înmatriculare nu se pliază niciodată.** E al fiecărui camion în
-parte, iar alinierea lui pe al altuia ar muta tăcut înmatricularea unui camion pe
-altul.
+**Numărul de înmatriculare** primește alt tratament, fiindcă e altfel de dată.
+Se aduce la o singură formă — majuscule, un singur spațiu — pentru că „cvb 407"
+și „CVB 407" sunt același număr pe același camion. Dar nu se pliază niciodată pe
+al *altui* camion: un număr deja aflat în flotă e refuzat la salvare, cu mesaj,
+în loc să intre ca al doilea camion.
+
+Sugestiile de la număr nu sunt acolo ca să alegi din ele — un număr aparține unui
+singur camion. Sunt acolo ca să vezi, în timp ce scrii, că acel camion e deja în
+flotă, înainte să te oprească validarea.
 
 Partea comună — compararea fără diacritice, fără majuscule și fără spații în plus
 — stă în `App\Support\Names`, folosită de amândouă.
