@@ -14,6 +14,13 @@
     'max' => null,
 ])
 
+{{--
+    A `trailing` slot puts a control on the input's right edge instead of a unit
+    label — the currency picker beside a price, say. Unlike the suffix it is
+    interactive, so it takes pointer events and the input's padding grows to
+    clear it.
+--}}
+
 @php
     $directive = $live ? 'wire:model.live' : 'wire:model';
 
@@ -23,7 +30,11 @@
         'w-full rounded-button border border-line bg-paper py-2 pl-3 text-sm text-copy transition-colors',
         'focus:border-forest focus:outline-none',
         '[appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none',
-        $suffix ? 'pr-14' : 'pr-3',
+        match (true) {
+            isset($trailing) => 'pr-24',
+            (bool) $suffix => 'pr-14',
+            default => 'pr-3',
+        },
     ]);
 
     $numeric = ['step' => $step, 'min' => $min, 'max' => $max];
@@ -63,9 +74,15 @@
             >
         @endif
 
-        @if ($suffix)
+        @isset($trailing)
+            {{-- Sits on the input's own right edge, inside its border, so the two
+                 read as one control rather than as a field and a stray select. --}}
+            <div class="absolute inset-y-1 right-1 flex items-center">
+                {{ $trailing }}
+            </div>
+        @elseif ($suffix)
             <span class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-xs font-medium text-muted">{{ $suffix }}</span>
-        @endif
+        @endisset
     </div>
 
     @error($model) <p class="mt-1 text-xs text-red-700">{{ $message }}</p> @enderror

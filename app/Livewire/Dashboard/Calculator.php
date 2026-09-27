@@ -9,6 +9,7 @@ use App\Models\Setting;
 use App\Models\Vehicle;
 use App\Support\Place;
 use App\Support\RouteCosting;
+use Illuminate\Validation\Rule;
 use Illuminate\Support\Collection;
 use Illuminate\View\View;
 use Livewire\Attributes\Computed;
@@ -40,7 +41,11 @@ class Calculator extends Component
 
     public string $price_per_tonne = '';
 
-    public string $eur_rate = '';
+    /** 'EUR' or 'USD' — what the customer is quoted in. */
+    public string $quote_currency = 'EUR';
+
+    /** Lei per unit of that currency. Filled from the settings, then editable. */
+    public string $quote_rate = '';
 
     public string $consumption = '';
 
@@ -148,6 +153,20 @@ class Calculator extends Component
     }
 
     /**
+     * Switching currency brings its rate with it, because the old one is wrong
+     * for the new currency by an order of magnitude and a stale 19,9 against
+     * dollars would look plausible enough to save.
+     *
+     * The rate stays editable afterwards: the settings hold the usual figure, not
+     * the one on the customer's invoice.
+     */
+    public function updatedQuoteCurrency(): void
+    {
+        $this->quote_currency = mb_strtoupper($this->quote_currency);
+        $this->quote_rate = (string) Setting::quoteRate($this->quote_currency);
+    }
+
+    /**
      * Most runs come home the way they went, so the return leg follows the
      * outbound one until someone says otherwise.
      */
@@ -248,7 +267,8 @@ class Calculator extends Component
             'fuel_price' => $this->fuel_price,
             'tonnes' => $this->tonnes,
             'price_per_tonne' => $this->price_per_tonne,
-            'eur_rate' => $this->eur_rate,
+            'quote_rate' => $this->quote_rate,
+            'quote_currency' => $this->quote_currency,
             'wear_per_km' => $this->wear_per_km,
             'customs' => $this->customs,
             'vignette' => $this->vignette,
@@ -279,7 +299,8 @@ class Calculator extends Component
             'distance_km' => ['required', 'numeric', 'min:0.01'],
             'tonnes' => ['nullable', 'numeric', 'min:0'],
             'price_per_tonne' => ['nullable', 'numeric', 'min:0'],
-            'eur_rate' => ['required', 'numeric', 'min:0.0001'],
+            'quote_currency' => ['required', 'string', Rule::in(array_keys(Setting::QUOTE_CURRENCIES))],
+            'quote_rate' => ['required', 'numeric', 'min:0.0001'],
             'consumption' => ['required', 'numeric', 'min:0'],
             'fuel_price' => ['required', 'numeric', 'min:0'],
             'wear_per_km' => ['nullable', 'numeric', 'min:0'],
@@ -308,7 +329,8 @@ class Calculator extends Component
             'distance_km' => 'distanța',
             'tonnes' => 'volumul',
             'price_per_tonne' => 'prețul per tonă',
-            'eur_rate' => 'cursul EUR',
+            'quote_currency' => 'moneda',
+            'quote_rate' => 'cursul valutar',
             'consumption' => 'consumul',
             'fuel_price' => 'prețul combustibilului',
             'wear_per_km' => 'uzura pe km',
@@ -431,7 +453,8 @@ class Calculator extends Component
         $this->distance_km = (string) $route->distance_km;
         $this->tonnes = (string) $route->tonnes;
         $this->price_per_tonne = (string) $route->price_per_tonne;
-        $this->eur_rate = (string) $route->eur_rate;
+        $this->quote_currency = $route->quote_currency ?: 'EUR';
+        $this->quote_rate = (string) $route->quote_rate;
         $this->consumption = (string) $route->consumption;
         $this->fuel_price = (string) $route->fuel_price;
         $this->wear_per_km = (string) $route->wear_per_km;
@@ -464,9 +487,14 @@ class Calculator extends Component
      */
     private function applyDefaults(): void
     {
-        foreach (['eur_rate', 'consumption', 'fuel_price', 'wear_per_km', 'customs', 'vignette', 'driver_first_day', 'driver_extra_day'] as $key) {
+        foreach (['consumption', 'fuel_price', 'wear_per_km', 'customs', 'vignette', 'driver_first_day', 'driver_extra_day'] as $key) {
             $this->{$key} = (string) Setting::get($key);
         }
+
+        // The rate follows the currency rather than being a setting of its own,
+        // so the two can never start out disagreeing.
+        $this->quote_currency = mb_strtoupper((string) Setting::get('quote_currency'));
+        $this->quote_rate = (string) Setting::quoteRate($this->quote_currency);
 
         $this->other_costs = $this->other_costs !== '' ? $this->other_costs : '0';
 

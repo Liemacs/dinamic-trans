@@ -17,8 +17,8 @@ cifra din tabel nu pot să difere.
 
 ```
 distanță totală = distanță dus + distanță întors
-preț rută (EUR) = tone × preț/tonă  +  tone retur × preț/tonă retur
-preț rută (MDL) = preț rută (EUR) × curs
+preț rută (valută) = tone × preț/tonă  +  tone retur × preț/tonă retur
+preț rută (MDL)    = preț rută (valută) × curs
 combustibil (L) = distanță totală × consum   ← consumul e în L/km, nu L/100km
 cost combustibil = combustibil × preț/L
 salariu          = prima zi + (zile − 1) × zi adițională + zi încărcare
@@ -26,8 +26,14 @@ uzură            = distanță totală × uzură/km
 profit           = preț rută (MDL) − combustibil − salariu − uzură − vamă − rovinietă
 ```
 
-Prețul se cotează în euro și se încasează în lei; cursul e un parametru, iar
-fiecare rută salvată își reține cursul cu care a fost calculată.
+Prețul se cotează **în euro sau în dolari** — unii clienți plătesc într-o monedă,
+alții în cealaltă — și se încasează în lei. Valuta se alege chiar în câmpul de
+preț, iar cursul ei vine din Valori implicite și rămâne editabil pe cursă.
+Costurile sunt întotdeauna în lei, deci totalurile se pot aduna peste rute de
+monede diferite.
+
+Fiecare rută salvată își reține atât valuta, cât și cursul cu care a fost
+calculată.
 
 **Distanța are două picioare.** Camionul consumă și se uzează și la întoarcere,
 fie că duce ceva, fie că vine gol — deci combustibilul și uzura se calculează pe

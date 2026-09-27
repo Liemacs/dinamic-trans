@@ -158,21 +158,21 @@
                                             <dl class="mt-1.5 space-y-1 text-xs text-muted">
                                                 <div class="flex justify-between gap-3">
                                                     <dt>Volum dus</dt>
-                                                    <dd class="tabular-nums text-copy">{{ Format::number($costing->tonnes, 1) }} t × {{ Format::eur($costing->pricePerTonne) }}</dd>
+                                                    <dd class="tabular-nums text-copy">{{ Format::number($costing->tonnes, 1) }} t × {{ Format::quoted($costing->pricePerTonne, $costing->quoteCurrency) }}</dd>
                                                 </div>
                                                 @if ($costing->hasReturnLoad())
                                                     <div class="flex justify-between gap-3">
                                                         <dt>Volum retur</dt>
-                                                        <dd class="tabular-nums text-copy">{{ Format::number($costing->returnTonnes, 1) }} t × {{ Format::eur($costing->returnPricePerTonne) }}</dd>
+                                                        <dd class="tabular-nums text-copy">{{ Format::number($costing->returnTonnes, 1) }} t × {{ Format::quoted($costing->returnPricePerTonne, $costing->quoteCurrency) }}</dd>
                                                     </div>
                                                 @endif
                                                 <div class="flex justify-between gap-3">
-                                                    <dt>Curs EUR</dt>
-                                                    <dd class="tabular-nums text-copy">{{ Format::number($costing->eurRate, 2) }}</dd>
+                                                    <dt>Curs {{ $costing->quoteCurrency }}</dt>
+                                                    <dd class="tabular-nums text-copy">{{ Format::number($costing->quoteRate, 2) }}</dd>
                                                 </div>
                                                 <div class="flex justify-between gap-3 border-t border-line pt-1">
                                                     <dt>Preț rută</dt>
-                                                    <dd class="tabular-nums font-medium text-copy">{{ Format::eur($costing->revenueEur()) }}</dd>
+                                                    <dd class="tabular-nums font-medium text-copy">{{ Format::quoted($costing->revenueQuoted(), $costing->quoteCurrency) }}</dd>
                                                 </div>
                                             </dl>
                                         </div>

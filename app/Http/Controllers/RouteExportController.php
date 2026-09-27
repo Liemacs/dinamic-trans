@@ -56,7 +56,7 @@ class RouteExportController extends Controller
             7,    // zile
             11, 11, 12,           // km dus / intors / total
             10, 12, 10, 12,       // tone si preturi
-            8, 12, 13,            // curs, venit EUR, venit MDL
+            9, 8, 12, 13,         // moneda, curs, venit valuta, venit MDL
             11, 13,               // litri, combustibil
             12, 12, 10, 11, 11,   // salariu, uzura, vama, rovinieta, alte
             13, 13, 8,            // cost total, profit, marja
@@ -78,8 +78,8 @@ class RouteExportController extends Controller
         $sheet->row([
             $bold('Data'), $bold('Rută'), $bold('Camion'), $bold('Număr'), $bold('Zile'),
             $bold('Dus (km)'), $bold('Întors (km)'), $bold('Total (km)'),
-            $bold('Tone dus'), $bold('Preț/tonă dus (€)'), $bold('Tone retur'), $bold('Preț/tonă retur (€)'),
-            $bold('Curs'), $bold('Venit (€)'), $bold('Venit ('.$lei.')'),
+            $bold('Tone dus'), $bold('Preț/tonă dus'), $bold('Tone retur'), $bold('Preț/tonă retur'),
+            $bold('Monedă'), $bold('Curs'), $bold('Venit (valută)'), $bold('Venit ('.$lei.')'),
             $bold('Motorină (L)'), $bold('Combustibil'),
             $bold('Salariu'), $bold('Uzură'), $bold('Vamă'), $bold('Rovinietă'), $bold('Alte'),
             $bold('Cost total'), $bold('Profit'), $bold('Marjă'), $bold('Note'),
@@ -109,8 +109,9 @@ class RouteExportController extends Controller
                 XlsxWriter::cell($c->pricePerTonne, XlsxWriter::DECIMAL),
                 XlsxWriter::cell($c->returnTonnes, XlsxWriter::DECIMAL),
                 XlsxWriter::cell($c->returnPricePerTonne, XlsxWriter::DECIMAL),
-                XlsxWriter::cell($c->eurRate, XlsxWriter::DECIMAL),
-                XlsxWriter::cell($c->revenueEur(), XlsxWriter::NUMBER),
+                $c->quoteCurrency,
+                XlsxWriter::cell($c->quoteRate, XlsxWriter::DECIMAL),
+                XlsxWriter::cell($c->revenueQuoted(), XlsxWriter::NUMBER),
                 XlsxWriter::cell($c->revenue(), XlsxWriter::NUMBER),
                 XlsxWriter::cell($c->fuelLitres(), XlsxWriter::NUMBER),
                 XlsxWriter::cell($c->fuelCost(), XlsxWriter::NUMBER),
@@ -135,7 +136,7 @@ class RouteExportController extends Controller
                 $bold('Total'), null, null, null, null,
                 null, null, XlsxWriter::cell($totals['distance'], XlsxWriter::NUMBER, true),
                 null, null, null, null,
-                null, null, XlsxWriter::cell($totals['revenue'], XlsxWriter::NUMBER, true),
+                null, null, null, XlsxWriter::cell($totals['revenue'], XlsxWriter::NUMBER, true),
                 XlsxWriter::cell($totals['litres'], XlsxWriter::NUMBER, true),
                 null, null, null, null, null, null,
                 XlsxWriter::cell($totals['cost'], XlsxWriter::NUMBER, true),

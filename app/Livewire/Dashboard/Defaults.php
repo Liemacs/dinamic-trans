@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Livewire\Dashboard;
 
 use App\Models\Setting;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 use Livewire\Component;
 
@@ -17,7 +18,11 @@ class Defaults extends Component
 {
     public string $currency = '';
 
+    public string $quote_currency = '';
+
     public string $eur_rate = '';
+
+    public string $usd_rate = '';
 
     public string $consumption = '';
 
@@ -48,7 +53,9 @@ class Defaults extends Component
     {
         $data = $this->validate([
             'currency' => ['required', 'string', 'max:8'],
+            'quote_currency' => ['required', 'string', Rule::in(array_keys(Setting::QUOTE_CURRENCIES))],
             'eur_rate' => ['required', 'numeric', 'min:0.0001'],
+            'usd_rate' => ['required', 'numeric', 'min:0.0001'],
             'consumption' => ['required', 'numeric', 'min:0'],
             'fuel_price' => ['required', 'numeric', 'min:0'],
             'wear_per_km' => ['required', 'numeric', 'min:0'],
@@ -60,7 +67,9 @@ class Defaults extends Component
             'gps_monthly' => ['required', 'numeric', 'min:0'],
         ], attributes: [
             'currency' => 'moneda',
+            'quote_currency' => 'moneda implicită',
             'eur_rate' => 'cursul EUR',
+            'usd_rate' => 'cursul USD',
             'consumption' => 'consumul',
             'fuel_price' => 'prețul combustibilului',
             'wear_per_km' => 'uzura pe km',

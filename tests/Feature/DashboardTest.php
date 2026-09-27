@@ -45,7 +45,7 @@ class DashboardTest extends TestCase
         Livewire::test(Calculator::class)
             ->assertSet('fuel_price', '34')
             ->assertSet('consumption', '0.5')
-            ->assertSet('eur_rate', '20.1')
+            ->assertSet('quote_rate', '20.1')
             ->assertSet('driver_first_day', '2200')
             ->assertSet('driver_extra_day', '1000');
     }
@@ -294,7 +294,7 @@ class DashboardTest extends TestCase
         $this->assertFalse($route->costing()->hasReturnLoad());
         // Still 600 km driven, but nothing earned on the way back.
         $this->assertSame(600.0, $route->costing()->totalDistanceKm());
-        $this->assertSame(875.0, round($route->costing()->revenueEur(), 2));
+        $this->assertSame(875.0, round($route->costing()->revenueQuoted(), 2));
     }
 
     public function test_a_route_cannot_be_saved_without_a_vehicle(): void
@@ -381,7 +381,7 @@ class DashboardTest extends TestCase
             'origin' => 'Hâncești', 'destination' => 'Brăila',
             'vehicle_id' => null,
             'distance_km' => 220, 'return_distance_km' => 220,
-            'tonnes' => 25, 'price_per_tonne' => 35, 'eur_rate' => 19.9,
+            'tonnes' => 25, 'price_per_tonne' => 35, 'quote_rate' => 19.9,
             'consumption' => 0.45, 'fuel_price' => 32, 'wear_per_km' => 2,
             'customs' => 700, 'vignette' => 600,
             'days' => 3, 'driver_first_day' => 2200, 'driver_extra_day' => 1000,

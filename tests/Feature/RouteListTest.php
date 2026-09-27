@@ -28,7 +28,7 @@ class RouteListTest extends TestCase
             'return_distance_km' => 220,
             'tonnes' => 25,
             'price_per_tonne' => 35,
-            'eur_rate' => 19.9,
+            'quote_rate' => 19.9,
             'consumption' => 0.45,
             'fuel_price' => 32,
             'wear_per_km' => 2,

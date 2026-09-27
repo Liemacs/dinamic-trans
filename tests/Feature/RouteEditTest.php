@@ -34,7 +34,7 @@ class RouteEditTest extends TestCase
             'return_distance_km' => 220,
             'tonnes' => 25,
             'price_per_tonne' => 35,
-            'eur_rate' => 19.9,
+            'quote_rate' => 19.9,
             'consumption' => 0.45,
             'fuel_price' => 32,
             'wear_per_km' => 2,
@@ -76,7 +76,7 @@ class RouteEditTest extends TestCase
         $truck = $this->spreadsheetTruck();
         $route = $this->route(['vehicle_id' => $truck->id]);
 
-        Setting::put(['eur_rate' => '25', 'fuel_price' => '64', 'consumption' => '0.9', 'driver_first_day' => '6600']);
+        Setting::put(['quote_rate' => '25', 'fuel_price' => '64', 'consumption' => '0.9', 'driver_first_day' => '6600']);
 
         Livewire::test(Calculator::class, ['routeId' => $route->id])
             ->assertSet('editing', $route->id)
@@ -84,7 +84,7 @@ class RouteEditTest extends TestCase
             ->assertSet('destination', 'Brăila')
             ->assertSet('vehicle_id', $truck->id)
             ->assertSet('distance_km', '220')
-            ->assertSet('eur_rate', '19.9')
+            ->assertSet('quote_rate', '19.9')
             ->assertSet('fuel_price', '32')
             ->assertSet('consumption', '0.45')
             ->assertSet('driver_first_day', '2200');
@@ -134,7 +134,7 @@ class RouteEditTest extends TestCase
         $this->assertSame(4, $fresh->days);
         // Untouched fields keep what they were saved with.
         $this->assertSame('Hâncești', $fresh->origin);
-        $this->assertSame(19.9, $fresh->eur_rate);
+        $this->assertSame(19.9, $fresh->quote_rate);
     }
 
     /** The figures follow the edit, since they are worked out from the row. */

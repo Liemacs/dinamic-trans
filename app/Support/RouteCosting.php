@@ -14,8 +14,8 @@ namespace App\Support;
  *
  * The model follows the source spreadsheet (Calculator_rute.xlsx, sheet "Rute"):
  *
- *     preț rută (EUR) = tone × preț per tonă
- *     preț rută (MDL) = preț rută (EUR) × curs
+ *     preț rută (valută) = tone × preț per tonă
+ *     preț rută (MDL)    = preț rută (valută) × curs
  *     combustibil (L) = distanță totală × consum   // dus + întors; consum is L/km
  *     cost combustibil = combustibil × preț/L
  *     salariu          = prima zi + (zile − 1) × zi adițională
@@ -44,8 +44,14 @@ final readonly class RouteCosting
         public float $tonnes = 0.0,
         /** Euro per tonne — what the customer is quoted. */
         public float $pricePerTonne = 0.0,
-        /** Lei per euro, at the time the route was priced. */
-        public float $eurRate = 0.0,
+        /**
+         * Lei per unit of the quote currency, at the time the route was priced.
+         * Frozen on the row like every other figure: a rate that moved afterwards
+         * must not rewrite a margin already agreed.
+         */
+        public float $quoteRate = 0.0,
+        /** The currency the customer was quoted in — 'EUR' or 'USD'. */
+        public string $quoteCurrency = 'EUR',
         /** Insurance, service, tyres and the GPS subscription, per kilometre. */
         public float $wearPerKm = 0.0,
         public float $customs = 0.0,
@@ -90,7 +96,10 @@ final readonly class RouteCosting
             fuelPrice: $number('fuel_price'),
             tonnes: $number('tonnes'),
             pricePerTonne: $number('price_per_tonne'),
-            eurRate: $number('eur_rate'),
+            quoteRate: $number('quote_rate'),
+            quoteCurrency: is_string($input['quote_currency'] ?? null) && $input['quote_currency'] !== ''
+                ? mb_strtoupper($input['quote_currency'])
+                : 'EUR',
             wearPerKm: $number('wear_per_km'),
             customs: $number('customs'),
             vignette: $number('vignette'),
@@ -131,28 +140,28 @@ final readonly class RouteCosting
         return $this->tonnes + $this->returnTonnes;
     }
 
-    /** The outbound load, in euro. */
-    public function outboundRevenueEur(): float
+    /** The outbound load, in the currency it was quoted in. */
+    public function outboundRevenueQuoted(): float
     {
         return $this->tonnes * $this->pricePerTonne;
     }
 
-    /** The load carried home, in euro. Zero when the truck comes back empty. */
-    public function returnRevenueEur(): float
+    /** The load carried home, quoted. Zero when the truck comes back empty. */
+    public function returnRevenueQuoted(): float
     {
         return $this->returnTonnes * $this->returnPricePerTonne;
     }
 
-    /** Both loads together, in euro. */
-    public function revenueEur(): float
+    /** Both loads together, in the quote currency. */
+    public function revenueQuoted(): float
     {
-        return $this->outboundRevenueEur() + $this->returnRevenueEur();
+        return $this->outboundRevenueQuoted() + $this->returnRevenueQuoted();
     }
 
     /** The same figure in lei, at the rate the route was priced on. */
     public function revenue(): float
     {
-        return $this->revenueEur() * $this->eurRate;
+        return $this->revenueQuoted() * $this->quoteRate;
     }
 
     // -- Costs ----------------------------------------------------------------
@@ -254,10 +263,10 @@ final readonly class RouteCosting
      * The price per tonne that would break even, which is the figure to argue
      * over with a customer. Zero tonnes has none.
      */
-    public function breakEvenPerTonneEur(): float
+    public function breakEvenPerTonneQuoted(): float
     {
-        return $this->totalTonnes() > 0.0 && $this->eurRate > 0.0
-            ? $this->totalCost() / $this->eurRate / $this->totalTonnes()
+        return $this->totalTonnes() > 0.0 && $this->quoteRate > 0.0
+            ? $this->totalCost() / $this->quoteRate / $this->totalTonnes()
             : 0.0;
     }
 

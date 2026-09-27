@@ -8,10 +8,24 @@
             <div class="rounded-panel border border-line bg-lime/15 px-4 py-3 text-sm text-copy">{{ session('status') }}</div>
         @endif
 
-        <x-dashboard.card title="Marfă și curs" meta="Cum se transformă prețul cotat în euro într-o încasare în {{ $currency }}.">
+        <x-dashboard.card title="Marfă și curs" meta="Cum se transformă prețul cotat în valută într-o încasare în {{ $currency }}.">
             <div class="grid gap-4 sm:grid-cols-2">
                 <x-dashboard.field model="eur_rate" label="Curs EUR/{{ $currency }}" type="number" step="0.01" min="0" required />
-                <x-dashboard.field model="currency" label="Monedă" placeholder="MDL" help="Simbolul afișat lângă fiecare sumă." required />
+                <x-dashboard.field model="usd_rate" label="Curs USD/{{ $currency }}" type="number" step="0.01" min="0" required />
+
+                <x-dashboard.field
+                    model="quote_currency"
+                    label="Moneda implicită"
+                    type="select"
+                    help="Cu ce monedă pornește o rută nouă. Se schimbă pe fiecare cursă."
+                    required
+                >
+                    @foreach (\App\Models\Setting::QUOTE_CURRENCIES as $code => $symbol)
+                        <option value="{{ $code }}">{{ $code }} ({{ $symbol }})</option>
+                    @endforeach
+                </x-dashboard.field>
+
+                <x-dashboard.field model="currency" label="Moneda de încasare" placeholder="MDL" help="Simbolul afișat lângă fiecare sumă." required />
             </div>
 
             {{-- The one field here that does touch existing records. Every other

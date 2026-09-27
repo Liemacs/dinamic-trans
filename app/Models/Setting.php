@@ -35,10 +35,18 @@ class Setting extends Model
     public static function defaults(): array
     {
         return [
-            // Costs and results are in lei; only the customer's price is quoted
-            // in euro, and eur_rate is what settles it.
+            // Costs and results are always in lei; only the customer's price is
+            // quoted in a foreign currency, and the rates below settle it.
             'currency' => 'MDL',
+
+            /*
+             * The quote currencies and what a unit of each is worth in lei. Most
+             * customers pay in euro, some in dollars; `quote_currency` is only the
+             * one a new route starts on, and every route carries its own.
+             */
+            'quote_currency' => 'EUR',
             'eur_rate' => '19.9',
+            'usd_rate' => '17.5',
 
             'consumption' => '0.45',    // litres per kilometre, not per 100
             'fuel_price' => '32',       // lei per litre
@@ -56,6 +64,28 @@ class Setting extends Model
             // What a new vehicle starts with; each truck can carry its own.
             'gps_monthly' => '400',
         ];
+    }
+
+    /**
+     * The currencies a route may be quoted in, and the symbol each is shown with.
+     *
+     * Declared here so the calculator's dropdown, the validation rule and the
+     * formatting all read one list — adding a third is a line, not a search.
+     *
+     * @var array<string, string>
+     */
+    public const QUOTE_CURRENCIES = ['EUR' => '€', 'USD' => '$'];
+
+    /** The lei-per-unit rate for a quote currency, from the settings. */
+    public static function quoteRate(string $currency): float
+    {
+        return self::number(mb_strtolower($currency).'_rate');
+    }
+
+    /** The symbol a quote currency is written with; the code itself if unknown. */
+    public static function quoteSymbol(string $currency): string
+    {
+        return self::QUOTE_CURRENCIES[mb_strtoupper($currency)] ?? $currency;
     }
 
     /**

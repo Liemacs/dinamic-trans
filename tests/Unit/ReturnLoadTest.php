@@ -24,7 +24,7 @@ class ReturnLoadTest extends TestCase
             fuelPrice: 32,
             tonnes: 25,
             pricePerTonne: 35,
-            eurRate: 19.9,
+            quoteRate: 19.9,
             wearPerKm: 2,
             customs: 700,
             vignette: 600,
@@ -65,7 +65,7 @@ class ReturnLoadTest extends TestCase
 
         $this->assertFalse($costing->hasReturnLoad());
         $this->assertSame(880.0, $costing->totalDistanceKm());
-        $this->assertSame(0.0, $costing->returnRevenueEur());
+        $this->assertSame(0.0, $costing->returnRevenueQuoted());
 
         // But they are charged: 440 extra km of fuel and wear.
         $this->assertSame(396.0, round($costing->fuelLitres(), 2));
@@ -89,9 +89,9 @@ class ReturnLoadTest extends TestCase
     {
         $costing = $this->withReturn();
 
-        $this->assertSame(875.0, round($costing->outboundRevenueEur(), 2));  // 25 × 35
-        $this->assertSame(600.0, round($costing->returnRevenueEur(), 2));    // 20 × 30
-        $this->assertSame(1475.0, round($costing->revenueEur(), 2));
+        $this->assertSame(875.0, round($costing->outboundRevenueQuoted(), 2));  // 25 × 35
+        $this->assertSame(600.0, round($costing->returnRevenueQuoted(), 2));    // 20 × 30
+        $this->assertSame(1475.0, round($costing->revenueQuoted(), 2));
         $this->assertSame(29352.5, round($costing->revenue(), 2));           // × 19.9
         $this->assertSame(45.0, round($costing->totalTonnes(), 2));
     }
@@ -141,7 +141,7 @@ class ReturnLoadTest extends TestCase
         $costing = $this->withReturn();
 
         // 16 540 lei ÷ 19.9 ÷ 45 t.
-        $this->assertSame(18.47, round($costing->breakEvenPerTonneEur(), 2));
+        $this->assertSame(18.47, round($costing->breakEvenPerTonneQuoted(), 2));
     }
 
     public function test_the_breakdown_names_the_loading_day_separately(): void

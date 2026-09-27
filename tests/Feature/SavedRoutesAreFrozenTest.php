@@ -62,7 +62,7 @@ class SavedRoutesAreFrozenTest extends TestCase
         $costing = $route->costing();
 
         return [
-            'revenue_eur' => round($costing->revenueEur(), 4),
+            'revenue_eur' => round($costing->revenueQuoted(), 4),
             'revenue' => round($costing->revenue(), 4),
             'fuel_litres' => round($costing->fuelLitres(), 4),
             'fuel_cost' => round($costing->fuelCost(), 4),
@@ -75,7 +75,7 @@ class SavedRoutesAreFrozenTest extends TestCase
             'margin' => round($costing->margin(), 4),
             'cost_per_km' => round($costing->costPerKm(), 4),
             'profit_per_km' => round($costing->profitPerKm(), 4),
-            'break_even_per_tonne' => round($costing->breakEvenPerTonneEur(), 4),
+            'break_even_per_tonne' => round($costing->breakEvenPerTonneQuoted(), 4),
         ];
     }
 
@@ -183,7 +183,7 @@ class SavedRoutesAreFrozenTest extends TestCase
         Setting::put(['eur_rate' => '25', 'fuel_price' => '64']);
 
         Livewire::test(Calculator::class)
-            ->assertSet('eur_rate', '25')
+            ->assertSet('quote_rate', '25')
             ->assertSet('fuel_price', '64');
     }
 }

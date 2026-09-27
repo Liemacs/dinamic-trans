@@ -55,7 +55,7 @@ class ReportTest extends TestCase
             'return_distance_km' => 250,
             'tonnes' => 25,
             'price_per_tonne' => 20,
-            'eur_rate' => 20,
+            'quote_rate' => 20,
             'consumption' => 0.4,
             'fuel_price' => 30,
             'wear_per_km' => 2,

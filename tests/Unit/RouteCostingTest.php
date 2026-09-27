@@ -22,7 +22,7 @@ class RouteCostingTest extends TestCase
             fuelPrice: 32,
             tonnes: 25,
             pricePerTonne: 35,
-            eurRate: 19.9,
+            quoteRate: 19.9,
             wearPerKm: 2,
             customs: 700,
             vignette: 600,
@@ -36,7 +36,7 @@ class RouteCostingTest extends TestCase
     {
         $costing = $this->hancestiBraila();
 
-        $this->assertSame(875.0, round($costing->revenueEur(), 2));      // F2
+        $this->assertSame(875.0, round($costing->revenueQuoted(), 2));      // F2
         $this->assertSame(17412.5, round($costing->revenue(), 2));       // H2
         $this->assertSame(198.0, round($costing->fuelLitres(), 2));      // I2
         $this->assertSame(6336.0, round($costing->fuelCost(), 2));       // K2
@@ -70,10 +70,10 @@ class RouteCostingTest extends TestCase
     {
         $costing = new RouteCosting(
             distanceKm: 100, consumption: 0, fuelPrice: 0,
-            tonnes: 10, pricePerTonne: 50, eurRate: 20,
+            tonnes: 10, pricePerTonne: 50, quoteRate: 20,
         );
 
-        $this->assertSame(500.0, $costing->revenueEur());
+        $this->assertSame(500.0, $costing->revenueQuoted());
         $this->assertSame(10000.0, $costing->revenue());
     }
 
@@ -86,7 +86,7 @@ class RouteCostingTest extends TestCase
 
     public function test_a_route_with_no_distance_divides_by_nothing(): void
     {
-        $costing = new RouteCosting(distanceKm: 0, consumption: 0.45, fuelPrice: 32, tonnes: 10, pricePerTonne: 50, eurRate: 20);
+        $costing = new RouteCosting(distanceKm: 0, consumption: 0.45, fuelPrice: 32, tonnes: 10, pricePerTonne: 50, quoteRate: 20);
 
         $this->assertFalse($costing->isComplete());
         $this->assertSame(0.0, $costing->costPerKm());
@@ -100,12 +100,12 @@ class RouteCostingTest extends TestCase
 
         // 12 716 MDL of cost ÷ 19.9 ÷ 25 t.
         $this->assertSame(12716.0, round($costing->totalCost(), 2));
-        $this->assertSame(25.56, round($costing->breakEvenPerTonneEur(), 2));
+        $this->assertSame(25.56, round($costing->breakEvenPerTonneQuoted(), 2));
 
         // And it is genuinely the break-even: quote that and the profit is nil.
         $atBreakEven = new RouteCosting(
             distanceKm: 440, consumption: 0.45, fuelPrice: 32,
-            tonnes: 25, pricePerTonne: $costing->breakEvenPerTonneEur(), eurRate: 19.9,
+            tonnes: 25, pricePerTonne: $costing->breakEvenPerTonneQuoted(), quoteRate: 19.9,
             wearPerKm: 2, customs: 700, vignette: 600,
             days: 3, driverFirstDay: 2200, driverExtraDay: 1000,
         );
@@ -115,9 +115,9 @@ class RouteCostingTest extends TestCase
 
     public function test_break_even_per_tonne_needs_a_load_to_divide_by(): void
     {
-        $costing = new RouteCosting(distanceKm: 440, consumption: 0.45, fuelPrice: 32, eurRate: 19.9);
+        $costing = new RouteCosting(distanceKm: 440, consumption: 0.45, fuelPrice: 32, quoteRate: 19.9);
 
-        $this->assertSame(0.0, $costing->breakEvenPerTonneEur());
+        $this->assertSame(0.0, $costing->breakEvenPerTonneQuoted());
     }
 
     public function test_from_array_treats_blank_and_junk_input_as_zero(): void

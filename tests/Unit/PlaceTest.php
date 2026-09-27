@@ -33,7 +33,7 @@ class PlaceTest extends TestCase
             'destination' => $destination,
             'return_destination' => $return,
             'distance_km' => 220, 'return_distance_km' => 220,
-            'tonnes' => 25, 'price_per_tonne' => 35, 'eur_rate' => 19.9,
+            'tonnes' => 25, 'price_per_tonne' => 35, 'quote_rate' => 19.9,
             'consumption' => 0.45, 'fuel_price' => 32, 'wear_per_km' => 2,
             'days' => 3, 'driver_first_day' => 2200, 'driver_extra_day' => 1000,
         ]);

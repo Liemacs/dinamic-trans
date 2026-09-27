@@ -14,6 +14,8 @@
     $ready = $costing->isComplete();
     $profitable = ! $ready || $costing->profit() >= 0;
     $lei = Setting::currency();
+    $quote = $costing->quoteCurrency;
+    $quoteSymbol = Setting::quoteSymbol($quote);
 @endphp
 
 {{-- The editing screen's two columns: a wide form, and a narrow column pinned
@@ -137,17 +139,32 @@
             </div>
         </x-dashboard.card>
 
-        <x-dashboard.card title="Marfa și tariful" meta="Prețul se cotează în euro și se încasează în {{ $lei }}.">
+        <x-dashboard.card title="Marfa și tariful" meta="Prețul se cotează în valută și se încasează în {{ $lei }}.">
             <div class="grid gap-4 sm:grid-cols-3">
                 <x-dashboard.field model="tonnes" label="Volum" type="number" suffix="tone" step="0.5" min="0" live />
-                <x-dashboard.field model="price_per_tonne" label="Preț per tonă" type="number" suffix="€" step="1" min="0" live />
-                <x-dashboard.field model="eur_rate" label="Curs EUR/{{ $lei }}" type="number" step="0.01" min="0" live required />
+                {{-- The price and the currency it is quoted in are one figure, so they
+                     are one control: the picker sits on the input's right edge. --}}
+                <x-dashboard.field model="price_per_tonne" label="Preț per tonă" type="number" step="1" min="0" live>
+                    <x-slot:trailing>
+                        <label for="field-quote_currency" class="sr-only">Moneda în care plătește clientul</label>
+                        <select
+                            id="field-quote_currency"
+                            wire:model.live="quote_currency"
+                            class="h-full rounded-[0.5rem] border-0 bg-warm py-0 pr-7 pl-2.5 text-sm font-medium text-copy focus:ring-2 focus:ring-forest focus:outline-none"
+                        >
+                            @foreach (\App\Models\Setting::QUOTE_CURRENCIES as $code => $symbol)
+                                <option value="{{ $code }}">{{ $symbol }} {{ $code }}</option>
+                            @endforeach
+                        </select>
+                    </x-slot:trailing>
+                </x-dashboard.field>
+                <x-dashboard.field model="quote_rate" label="Curs {{ $quote }}/{{ $lei }}" type="number" step="0.01" min="0" live required />
             </div>
 
             <div class="mt-4 flex flex-wrap items-baseline justify-between gap-3 rounded-button border border-line bg-warm px-4 py-3">
                 <span class="text-xs font-medium tracking-[0.08em] text-muted uppercase">Marfă dus</span>
                 <span class="text-sm text-copy">
-                    <span class="font-semibold">{{ Format::eur($costing->outboundRevenueEur()) }}</span>
+                    <span class="font-semibold">{{ Format::quoted($costing->outboundRevenueQuoted(), $quote) }}</span>
                     @unless ($costing->hasReturnLoad())
                         <span class="text-muted">→</span>
                         <span class="font-semibold">{{ Format::money($costing->revenue()) }}</span>
@@ -175,7 +192,7 @@
                         required
                     />
                     <x-dashboard.field model="return_tonnes" label="Volum retur" type="number" suffix="tone" step="0.5" min="0" live />
-                    <x-dashboard.field model="return_price_per_tonne" label="Preț per tonă retur" type="number" suffix="€" step="1" min="0" live />
+                    <x-dashboard.field model="return_price_per_tonne" label="Preț per tonă retur" type="number" :suffix="$quoteSymbol" step="1" min="0" live />
                     <x-dashboard.field
                         model="loading_day_bonus"
                         label="Plată zi încărcare"
@@ -191,9 +208,9 @@
                 <div class="mt-4 flex flex-wrap items-baseline justify-between gap-3 rounded-button border border-line bg-warm px-4 py-3">
                     <span class="text-xs font-medium tracking-[0.08em] text-muted uppercase">Venit retur</span>
                     <span class="text-sm text-copy">
-                        <span class="font-semibold">{{ Format::eur($costing->returnRevenueEur()) }}</span>
+                        <span class="font-semibold">{{ Format::quoted($costing->returnRevenueQuoted(), $quote) }}</span>
                         <span class="text-muted">→</span>
-                        <span class="font-semibold">{{ Format::money($costing->returnRevenueEur() * $costing->eurRate) }}</span>
+                        <span class="font-semibold">{{ Format::money($costing->returnRevenueQuoted() * $costing->quoteRate) }}</span>
                     </span>
                 </div>
             @endif
@@ -290,7 +307,7 @@
                 @if ($costing->hasReturnLoad())
                     <div class="flex items-baseline justify-between gap-3 text-xs">
                         <dt class="text-white/50">din care retur</dt>
-                        <dd class="text-white/70">{{ Format::money($costing->returnRevenueEur() * $costing->eurRate) }}</dd>
+                        <dd class="text-white/70">{{ Format::money($costing->returnRevenueQuoted() * $costing->quoteRate) }}</dd>
                     </div>
                 @endif
                 <div class="flex items-baseline justify-between gap-3">
@@ -316,7 +333,7 @@
                 </div>
                 <div class="flex items-baseline justify-between gap-3">
                     <dt class="text-muted">Pe tonă</dt>
-                    <dd class="font-medium text-copy">{{ $costing->breakEvenPerTonneEur() > 0 ? Format::eur($costing->breakEvenPerTonneEur()) : '—' }}</dd>
+                    <dd class="font-medium text-copy">{{ $costing->breakEvenPerTonneQuoted() > 0 ? Format::quoted($costing->breakEvenPerTonneQuoted(), $quote) : '—' }}</dd>
                 </div>
             </dl>
             <p class="mt-3 text-xs leading-relaxed text-muted">Sub aceste cifre cursa iese pe pierdere.</p>

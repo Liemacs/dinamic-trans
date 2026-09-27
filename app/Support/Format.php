@@ -11,9 +11,8 @@ use App\Models\Setting;
  *
  * Romanian convention throughout: comma for the decimal mark, dot for the
  * thousands separator. The lei symbol comes from Settings → Valori implicite, so
- * a fleet settling in another currency is one field away; the euro is written
- * out, because only one figure on these screens is quoted in it — the customer's
- * price per tonne.
+ * a fleet settling in another currency is one field away; the quote symbol comes
+ * from the route, because a customer may be billed in euro or in dollars.
  */
 final class Format
 {
@@ -22,9 +21,15 @@ final class Format
         return self::number($amount, $decimals).' '.Setting::currency();
     }
 
-    public static function eur(float $amount, int $decimals = 2): string
+    /**
+     * A sum in the currency a route was quoted in.
+     *
+     * Takes the currency rather than assuming euro: some customers pay in
+     * dollars, and the symbol has to follow the route rather than the app.
+     */
+    public static function quoted(float $amount, string $currency = 'EUR', int $decimals = 2): string
     {
-        return self::number($amount, $decimals).' €';
+        return self::number($amount, $decimals).' '.Setting::quoteSymbol($currency);
     }
 
     public static function number(float $amount, int $decimals = 2): string
