@@ -10,8 +10,46 @@
 
         <x-dashboard.card title="Marfă și curs" meta="Cum se transformă prețul cotat în valută într-o încasare în {{ $currency }}.">
             <div class="grid gap-4 sm:grid-cols-2">
-                <x-dashboard.field model="eur_rate" label="Curs EUR/{{ $currency }}" type="number" step="0.01" min="0" required />
-                <x-dashboard.field model="usd_rate" label="Curs USD/{{ $currency }}" type="number" step="0.01" min="0" required />
+                <x-dashboard.field model="eur_rate" label="Curs EUR/{{ $currency }}" type="number" step="0.0001" min="0" required />
+                <x-dashboard.field model="usd_rate" label="Curs USD/{{ $currency }}" type="number" step="0.0001" min="0" required />
+
+                {{-- Where the two rates above came from. They are taken from BNM
+                     on their own each day; this line says whether today's are in,
+                     and the button fetches them again after a correction by hand. --}}
+                @php $rates = \App\Support\BnmRates::provenance(); @endphp
+                <div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-button border border-line bg-warm px-4 py-3 sm:col-span-2">
+                    <span class="flex items-start gap-2 text-xs leading-relaxed text-muted">
+                        @if ($rates['source'] === 'bnm' && $rates['current'])
+                            <x-dashboard.icon name="check" size="size-4" class="mt-px shrink-0 text-forest" />
+                            <span>Curs oficial BNM din <span class="font-medium text-copy">{{ $rates['date']->format('d.m.Y') }}</span>, preluat automat.</span>
+                        @elseif ($rates['source'] === 'manual' && $rates['current'])
+                            <x-dashboard.icon name="pencil" size="size-4" class="mt-px shrink-0 text-ink-400" />
+                            <span>Introdus manual azi. De mâine se preia iar de la BNM.</span>
+                        @else
+                            <x-dashboard.icon name="warning" size="size-4" class="mt-px shrink-0 text-ink-400" />
+                            <span>
+                                BNM nu a răspuns.
+                                @if ($rates['date'])
+                                    Se folosește ultimul curs cunoscut, din {{ $rates['date']->format('d.m.Y') }}.
+                                @else
+                                    Se folosesc cursurile de mai sus.
+                                @endif
+                            </span>
+                        @endif
+                    </span>
+
+                    <button
+                        type="button"
+                        wire:click="refreshFromBnm"
+                        wire:loading.attr="disabled"
+                        wire:target="refreshFromBnm"
+                        class="inline-flex items-center gap-1.5 rounded-button border border-line bg-paper px-3 py-1.5 text-xs font-medium text-copy transition-colors hover:bg-paper/60 disabled:opacity-60"
+                    >
+                        <x-dashboard.icon name="reset" size="size-3.5" />
+                        <span wire:loading.remove wire:target="refreshFromBnm">Preia de la BNM</span>
+                        <span wire:loading wire:target="refreshFromBnm">Se preia…</span>
+                    </button>
+                </div>
 
                 <x-dashboard.field
                     model="quote_currency"
@@ -118,8 +156,9 @@
                 luni rămâne cea cotată atunci.
             </p>
             <p class="mt-3 text-sm leading-relaxed text-muted">
-                Uzura de mai sus se folosește doar când cursa nu are un vehicul ales.
-                Când are, calculatorul ia cheltuielile anuale ale camionului respectiv.
+                Cursurile EUR și USD se preiau singure de la BNM în fiecare zi. Dacă
+                le corectezi de mână, corecția ține până la sfârșitul zilei, apoi
+                cursul oficial preia din nou.
             </p>
         </x-dashboard.card>
 

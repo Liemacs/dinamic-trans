@@ -158,7 +158,7 @@
                         </select>
                     </x-slot:trailing>
                 </x-dashboard.field>
-                <x-dashboard.field model="quote_rate" label="Curs {{ $quote }}/{{ $lei }}" type="number" step="0.01" min="0" live required />
+                <x-dashboard.field model="quote_rate" label="Curs {{ $quote }}/{{ $lei }}" type="number" step="0.0001" min="0" :help="$this->rateNote" live required />
             </div>
 
             <div class="mt-4 flex flex-wrap items-baseline justify-between gap-3 rounded-button border border-line bg-warm px-4 py-3">

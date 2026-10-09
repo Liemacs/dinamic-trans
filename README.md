@@ -35,6 +35,26 @@ monede diferite.
 Fiecare rută salvată își reține atât valuta, cât și cursul cu care a fost
 calculată.
 
+**Cursurile EUR și USD vin automat de la Banca Națională a Moldovei**
+(`App\Support\BnmRates`). La prima rută nouă din zi, aplicația cere cursul oficial
+al zilei — după ora Chișinăului, nu UTC — și îl pune în Valori implicite. Un curs
+publicat nu se mai schimbă, așa că se cere o singură dată pe zi.
+
+Dacă BNM nu răspunde, calculatorul merge mai departe cu ultimul curs cunoscut și
+spune asta sub câmp; nu se blochează. După un eșec, BNM nu e întrebat din nou timp
+de 30 de minute, ca o pană a lor să nu încetinească fiecare pagină.
+
+O corecție de mână în Valori implicite ține până la sfârșitul zilei, apoi cursul
+oficial preia din nou. Butonul „Preia de la BNM" îl aduce imediat înapoi.
+
+O rută **salvată** nu întreabă niciodată BNM: își păstrează cursul cu care a fost
+cotată. Re-prețuirea unei oferte deja convenite la cursul de azi ar fi exact
+derapajul pe care cifrele înghețate există ca să-l oprească.
+
+Cu un scheduler pornit (`php artisan schedule:run` din cron), comanda `rates:bnm`
+rulează și singură, la 06:00 și 14:00 ora Chișinăului. Fără el, aplicația se
+descurcă oricum — cererea de la prima rută nouă din zi e plasa de siguranță.
+
 **Distanța are două picioare.** Camionul consumă și se uzează și la întoarcere,
 fie că duce ceva, fie că vine gol — deci combustibilul și uzura se calculează pe
 `dus + întors`, nu doar pe dus. Câmpul „Distanță întors" se completează singur cu

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Livewire\Dashboard;
 
 use App\Models\Setting;
+use App\Support\BnmRates;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 use Livewire\Component;
@@ -44,6 +45,33 @@ class Defaults extends Component
 
     public function mount(): void
     {
+        // Today's BNM rates first, so the screen opens on them rather than on
+        // yesterday's. A no-op once they are already in, and cached either way.
+        BnmRates::refreshSettings();
+
+        $this->loadSettings();
+    }
+
+    /**
+     * Fetch the BNM rates now, even if today's are already in — for when someone
+     * has typed over them and wants the official ones back.
+     */
+    public function refreshFromBnm(): void
+    {
+        if (BnmRates::refreshSettings(force: true)) {
+            $this->eur_rate = (string) Setting::get('eur_rate');
+            $this->usd_rate = (string) Setting::get('usd_rate');
+
+            session()->flash('status', 'Cursurile au fost preluate de la BNM.');
+
+            return;
+        }
+
+        session()->flash('status', 'BNM nu a răspuns. Au rămas ultimele cursuri cunoscute.');
+    }
+
+    private function loadSettings(): void
+    {
         foreach (array_keys(Setting::defaults()) as $key) {
             $this->{$key} = (string) Setting::get($key);
         }
@@ -81,7 +109,23 @@ class Defaults extends Component
             'gps_monthly' => 'abonamentul GPS',
         ]);
 
+        /*
+         * The screen saves every field at once, so a rate is only "set by hand"
+         * if it actually moved. Otherwise changing the fuel price would quietly
+         * switch the rates off BNM until tomorrow.
+         */
+        $ratesMoved = abs((float) $data['eur_rate'] - Setting::number('eur_rate')) > 0.00001
+            || abs((float) $data['usd_rate'] - Setting::number('usd_rate')) > 0.00001;
+
         Setting::put($data);
+
+        if ($ratesMoved) {
+            // Holds for the rest of the day; BNM takes over again tomorrow.
+            Setting::put([
+                'rates_source' => 'manual',
+                'rates_date' => now(BnmRates::TIMEZONE)->format('Y-m-d'),
+            ]);
+        }
 
         session()->flash('status', 'Valorile implicite au fost salvate.');
     }

@@ -7,6 +7,8 @@ namespace App\Livewire\Dashboard;
 use App\Models\RouteCalculation;
 use App\Models\Setting;
 use App\Models\Vehicle;
+use App\Support\BnmRates;
+use App\Support\Format;
 use App\Support\Place;
 use App\Support\RouteCosting;
 use Illuminate\Validation\Rule;
@@ -164,6 +166,41 @@ class Calculator extends Component
     {
         $this->quote_currency = mb_strtoupper($this->quote_currency);
         $this->quote_rate = (string) Setting::quoteRate($this->quote_currency);
+    }
+
+    /**
+     * One line under the rate field saying where its number came from.
+     *
+     * The rate stays editable, so the useful thing to know is whether it is still
+     * the official one — a route quoted off a rate someone typed in by hand ought
+     * to say so where the rate is being looked at.
+     */
+    #[Computed]
+    public function rateNote(): string
+    {
+        if ($this->editing !== null) {
+            return 'Cursul cu care a fost salvată ruta.';
+        }
+
+        $official = Setting::quoteRate($this->quote_currency);
+        $typed = is_numeric($this->quote_rate) ? (float) $this->quote_rate : null;
+        $rates = BnmRates::provenance();
+
+        if ($typed !== null && abs($typed - $official) > 0.00001) {
+            return 'Modificat pe această cursă. Cursul zilei: '.Format::number($official, 4).'.';
+        }
+
+        if ($rates['source'] === 'bnm' && $rates['current']) {
+            return 'Curs oficial BNM din '.$rates['date']->format('d.m.Y').'.';
+        }
+
+        if ($rates['source'] === 'manual' && $rates['current']) {
+            return 'Introdus manual azi în Valori implicite.';
+        }
+
+        return $rates['date'] !== null
+            ? 'BNM nu a răspuns — ultimul curs cunoscut, din '.$rates['date']->format('d.m.Y').'.'
+            : 'BNM nu a răspuns — cursul din Valori implicite.';
     }
 
     /**
@@ -487,6 +524,15 @@ class Calculator extends Component
      */
     private function applyDefaults(): void
     {
+        /*
+         * Today's BNM rates into the settings before anything is read from them,
+         * so a new route opens on the official rate. Only ever on a new route:
+         * one being edited keeps the rate it was saved with (see applyRoute), and
+         * re-pricing an agreed quote at today's rate would be exactly the drift
+         * the frozen figures exist to prevent. A no-op once today's are in.
+         */
+        BnmRates::refreshSettings();
+
         foreach (['consumption', 'fuel_price', 'wear_per_km', 'customs', 'vignette', 'driver_first_day', 'driver_extra_day'] as $key) {
             $this->{$key} = (string) Setting::get($key);
         }
