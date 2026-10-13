@@ -27,6 +27,7 @@ class DashboardTest extends TestCase
             'calculator' => ['dashboard.calculator'],
             'routes' => ['dashboard.routes'],
             'report' => ['dashboard.report'],
+            'pdf' => ['dashboard.pdf'],
             'vehicles' => ['dashboard.fleet.vehicles'],
             'defaults' => ['dashboard.fleet.defaults'],
         ];

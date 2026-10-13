@@ -155,6 +155,7 @@ ea scrie la ce ar duce ritmul de până acum pe un an întreg.
 | `/raport` | Darea de seamă pe o perioadă, cu filtru de camion |
 | `/raport/tipar` | Aceeași foaie pe o pagină goală, care deschide tipărirea |
 | `/raport/excel` | Aceleași rânduri, descărcate ca `.xlsx` |
+| `/unire-pdf` | Unește mai multe PDF-uri într-unul singur, în browser — fișierele nu ajung pe server |
 | `/flota/vehicule` | Ce costă fiecare camion într-un an, pe categorii |
 | `/flota/valori-implicite` | Parametrii cu care pornește fiecare calcul nou |
 

@@ -23,6 +23,7 @@ $views = [
     'calculator' => 'dashboard.calculator',
     'routes' => 'dashboard.routes',
     'report' => 'dashboard.report',
+    'pdf' => 'dashboard.pdf',
     'vehicles' => 'dashboard.vehicles',
     'defaults' => 'dashboard.defaults',
 ];

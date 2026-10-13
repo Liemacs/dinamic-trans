@@ -16,6 +16,7 @@ return [
         'calculator' => 'Calculator',
         'routes' => 'Rute salvate',
         'report' => 'Raport',
+        'pdf' => 'Unire PDF',
         'fleet' => 'Flotă',
         'vehicles' => 'Vehicule',
         'defaults' => 'Valori implicite',
@@ -37,6 +38,10 @@ return [
         'report' => [
             'title' => 'Raport',
             'description' => 'Darea de seamă pe o perioadă, gata de tipărit.',
+        ],
+        'pdf' => [
+            'title' => 'Unire PDF',
+            'description' => 'Mai multe fișiere PDF, puse în ordine și unite într-unul singur.',
         ],
         'vehicles' => [
             'title' => 'Vehicule',

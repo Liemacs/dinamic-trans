@@ -60,6 +60,13 @@ final class DashboardNav
                 'route' => 'dashboard.report',
             ],
             [
+                'type' => 'link',
+                'key' => 'pdf',
+                'icon' => 'folder',
+                'path' => 'unire-pdf',
+                'route' => 'dashboard.pdf',
+            ],
+            [
                 'type' => 'group',
                 'key' => 'fleet',
                 'icon' => 'truck',

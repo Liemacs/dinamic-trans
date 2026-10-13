@@ -182,6 +182,151 @@ document.addEventListener('livewire:init', () => {
     }));
 
     /*
+     * The "Unire PDF" page: a list of files the user orders, then joins.
+     *
+     * All of it happens in this browser — see resources/js/pdf-merge.js, which is
+     * imported on first use so the PDF library stays off every other page.
+     */
+    Alpine.data('pdfMerge', () => ({
+        files: [],
+        name: 'documente-unite',
+        dragging: null,
+        over: false,
+        busy: false,
+        error: '',
+        done: '',
+        nextId: 1,
+
+        get usable() {
+            return this.files.filter((file) => file.pages !== null);
+        },
+
+        get pageCount() {
+            return this.usable.reduce((sum, file) => sum + file.pages, 0);
+        },
+
+        get waiting() {
+            return this.files.some((file) => file.pages === null && file.error === '');
+        },
+
+        /** Two files at least, all of them read, none of them refused. */
+        get ready() {
+            return this.files.length >= 2 && !this.waiting && this.files.every((file) => file.error === '') && !this.busy;
+        },
+
+        size(bytes) {
+            return bytes >= 1048576
+                ? (bytes / 1048576).toFixed(1).replace('.', ',') + ' MB'
+                : Math.max(1, Math.round(bytes / 1024)) + ' KB';
+        },
+
+        async add(list) {
+            this.done = '';
+            this.error = '';
+
+            const picked = Array.from(list ?? []);
+            const pdfs = picked.filter((file) => file.type === 'application/pdf' || /\.pdf$/i.test(file.name));
+
+            if (pdfs.length < picked.length) {
+                this.error = 'Doar fișierele PDF pot fi unite; celelalte au fost lăsate deoparte.';
+            }
+
+            const { inspectPdf } = await import('./pdf-merge.js');
+
+            for (const file of pdfs) {
+                const entry = { id: this.nextId++, file, name: file.name, bytes: file.size, pages: null, error: '' };
+                this.files.push(entry);
+
+                // Through the reactive copy in the list, or the row never hears
+                // that its page count arrived.
+                inspectPdf(file).then((result) => {
+                    const row = this.files.find((candidate) => candidate.id === entry.id);
+
+                    if (!row) {
+                        return;
+                    }
+
+                    if (result.error) {
+                        row.error = result.error;
+                    } else {
+                        row.pages = result.pages;
+                    }
+                });
+            }
+        },
+
+        remove(id) {
+            this.files = this.files.filter((file) => file.id !== id);
+            this.done = '';
+        },
+
+        clear() {
+            this.files = [];
+            this.done = '';
+            this.error = '';
+        },
+
+        move(index, step) {
+            const target = index + step;
+
+            if (target < 0 || target >= this.files.length) {
+                return;
+            }
+
+            const [file] = this.files.splice(index, 1);
+            this.files.splice(target, 0, file);
+            this.done = '';
+        },
+
+        /** Dragging a row over another one takes its place as it passes. */
+        dragOver(index) {
+            if (this.dragging === null || this.dragging === index) {
+                return;
+            }
+
+            const [file] = this.files.splice(this.dragging, 1);
+            this.files.splice(index, 0, file);
+            this.dragging = index;
+            this.done = '';
+        },
+
+        async merge() {
+            if (!this.ready) {
+                return;
+            }
+
+            this.busy = true;
+            this.error = '';
+            this.done = '';
+
+            try {
+                const { mergePdfs } = await import('./pdf-merge.js');
+                const bytes = await mergePdfs(this.files.map((file) => file.file));
+
+                const name = (this.name.trim() || 'documente-unite').replace(/\.pdf$/i, '').replace(/[\\/:*?"<>|]+/g, '-') + '.pdf';
+                const url = URL.createObjectURL(new Blob([bytes], { type: 'application/pdf' }));
+                const link = document.createElement('a');
+
+                link.href = url;
+                link.download = name;
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+
+                // Freed a moment later: revoked at once, some browsers drop the
+                // download before it has started.
+                setTimeout(() => URL.revokeObjectURL(url), 10000);
+
+                this.done = `${name} — ${this.pageCount} pagini din ${this.files.length} fișiere.`;
+            } catch (error) {
+                this.error = 'Unirea nu a reușit. Verifică fișierele și încearcă din nou.';
+            } finally {
+                this.busy = false;
+            }
+        },
+    }));
+
+    /*
      * Whether the sidebar is collapsed to an icons-only rail.
      *
      * A store rather than x-data on the <aside>: the toggle button and the labels
